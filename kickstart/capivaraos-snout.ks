@@ -1,6 +1,6 @@
 #version=DEVEL
 # =============================================================================
-# CapivaraOS Snout - Fedora 44 (GNOME) - kickstart principal
+# CapivaraOS Snout - Fedora 45 (GNOME) - kickstart principal
 # =============================================================================
 #
 # Spin "completa" do CapivaraOS sobre o ambiente GNOME oficial do Fedora
@@ -22,7 +22,7 @@
 #       --project="CapivaraOS Snout" --make-iso --iso-only \
 #       --iso-name=CapivaraOS-Snout-1.0.1-x86_64.iso \
 #       --volid="CapivaraOS Snout 1.0.1" --variant="CapivaraOS Snout" \
-#       --releasever=44
+#       --releasever=45
 #
 # NOTA: o anaconda resolve "%include caminho.ks" em relação ao seu próprio
 # cwd (não ao diretório deste arquivo), por isso o ks-flatten.py acima é
