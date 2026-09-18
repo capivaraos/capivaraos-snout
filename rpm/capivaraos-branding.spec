@@ -24,7 +24,7 @@
 #     explícita do CapivaraOS Snout, diferente da spin Marsh).
 
 Name:           capivaraos-branding
-Version:        1.1.15
+Version:        2.0.0
 # O sufixo ".snout" no Release NAO e cosmetico -- e o que impede colisao de
 # NEVRA entre as spins. As tres (Marsh, Pup, Snout) constroem um pacote com
 # este MESMO Name e usam o mesmo ~/rpmbuild, entao duas spins na mesma
@@ -33,8 +33,14 @@ Version:        1.1.15
 # ambos em 1.0.0), e em 21/07 um build do Pup consumiu sources da Marsh
 # (BUG-30). Com o sufixo, a colisao passa a ser impossivel por construcao,
 # em vez de depender de escolher versoes livres na mao.
-Release:        1%{?dist}.snout
-Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 1.1.15
+#
+# Serie 2.x (Fedora 45): pre-releases no padrao Fedora
+# "0.N.alphaN.<dist>.snout" (0.1.alpha1, 0.2.alpha2, ...). O
+# "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
+# 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
+# atualiza "pra tras". Builds de dev saem rotulados "preview".
+Release:        0.1.alpha1%{?dist}.snout
+Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark AND CC-BY-SA-3.0 AND CC-BY-SA-4.0
 URL:            https://capivaraos.org
@@ -58,7 +64,7 @@ Requires:       dconf
 # dconf/posttrans, sem remover o pacote.
 
 %description
-Pacote de identidade visual do CapivaraOS Snout 1.1.15: wallpapers (incluindo as
+Pacote de identidade visual do CapivaraOS Snout 2.0.0 (preview): wallpapers (incluindo as
 fotos de capivaras do Wikimedia Commons, CC BY-SA), conjunto de ícones
 "capivaraos-logo" e "capivaraos-full-logo", tema Plymouth de boot, tela de
 login GDM, /etc/os-release, /etc/issue e wallpaper padrão do GNOME (via
@@ -626,37 +632,37 @@ plymouth-set-default-theme capivaraos >/dev/null 2>&1 || true
 # escritos aqui (em vez de %files) para evitar conflito de arquivo no dnf.
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 1.1.15"
+VERSION="Snout 2.0.0 (alpha1, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
-VERSION_ID=44
+VERSION_ID=45
 VERSION_CODENAME=snout
-PLATFORM_ID="platform:f44"
-PRETTY_NAME="CapivaraOS Snout 1.1.15"
+PLATFORM_ID="platform:f45"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha1, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-full-logo
-CPE_NAME="cpe:/o:capivaraos:capivaraos:44"
+CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
 DEFAULT_HOSTNAME=capivaraos
 HOME_URL="https://capivaraos.org"
 DOCUMENTATION_URL="https://capivaraos.org"
 SUPPORT_URL="https://capivaraos.org"
 BUG_REPORT_URL="https://capivaraos.org"
 REDHAT_BUGZILLA_PRODUCT="Fedora"
-REDHAT_BUGZILLA_PRODUCT_VERSION=44
+REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
-REDHAT_SUPPORT_PRODUCT_VERSION=44
-VARIANT="Snout 1.1.15"
+REDHAT_SUPPORT_PRODUCT_VERSION=45
+VARIANT="Snout 2.0.0 (alpha1, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 1.1.15 \n \l
+CapivaraOS Snout 2.0.0 (alpha1, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 1.1.15
+CapivaraOS Snout 2.0.0 (alpha1, preview)
 EOF
 
 # ── Reaplica os-release apos qualquer atualizacao futura do sistema ────────
@@ -680,37 +686,37 @@ EOF
 grep -q '^NAME="CapivaraOS"' %{_prefix}/lib/os-release 2>/dev/null && exit 0
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 1.1.15"
+VERSION="Snout 2.0.0 (alpha1, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
-VERSION_ID=44
+VERSION_ID=45
 VERSION_CODENAME=snout
-PLATFORM_ID="platform:f44"
-PRETTY_NAME="CapivaraOS Snout 1.1.15"
+PLATFORM_ID="platform:f45"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha1, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-full-logo
-CPE_NAME="cpe:/o:capivaraos:capivaraos:44"
+CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
 DEFAULT_HOSTNAME=capivaraos
 HOME_URL="https://capivaraos.org"
 DOCUMENTATION_URL="https://capivaraos.org"
 SUPPORT_URL="https://capivaraos.org"
 BUG_REPORT_URL="https://capivaraos.org"
 REDHAT_BUGZILLA_PRODUCT="Fedora"
-REDHAT_BUGZILLA_PRODUCT_VERSION=44
+REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
-REDHAT_SUPPORT_PRODUCT_VERSION=44
-VARIANT="Snout 1.1.15"
+REDHAT_SUPPORT_PRODUCT_VERSION=45
+VARIANT="Snout 2.0.0 (alpha1, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 1.1.15 \n \l
+CapivaraOS Snout 2.0.0 (alpha1, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 1.1.15
+CapivaraOS Snout 2.0.0 (alpha1, preview)
 EOF
 
 for kver in $(ls /lib/modules 2>/dev/null); do
@@ -778,6 +784,17 @@ done
 %{_sysconfdir}/anaconda/profile.d/capivaraos.conf
 
 %changelog
+* Fri Sep 18 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.1.alpha1
+- Primeira build da serie 2.x do Snout: rebase para Fedora 45 (base do 2.0) — PROD-114.
+  O F45 Beta saiu (2026-09-18). Repo novo capivaraos-snout-next (clonado do
+  capivaraos-snout-fedora p/ preservar a base GNOME + o fix do BUG-42), branch
+  rebase-f45. Repoint do compose: build-all.sh --releasever=45, base do kickstart
+  f44 -> f45 (fedora-45/updates-released-f45), trava de updates em 45. os-release/
+  issue -> Fedora 45 + "Snout 2.0.0 (alpha1, preview)". Snout CONTINUA GNOME.
+  Versionamento pre-release "0.N.alphaN.snout"; "2.0.0-1.snout" reservado p/ o
+  lancamento publico conjunto das 3 spins (PROD-61). SMOKE BUILD p/ levantar
+  quebras (GNOME/GDM no F45, Anaconda 45) — NAO cortar ISO publica do F45 antes do GA.
+
 * Sat Aug 22 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 1.1.15-1
 - CORRIGE a tela de login (BUG-42): sem autologin, o GDM nao mostrava a tela de
   login -- entrava direto numa "sessao fantasma" (greeter quebrado, rodando como
