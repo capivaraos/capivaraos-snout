@@ -42,7 +42,7 @@ Version:        2.0.0
 Release:        0.1.alpha1%{?dist}.snout
 Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0
 
-License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark AND CC-BY-SA-3.0 AND CC-BY-SA-4.0
+License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
 URL:            https://capivaraos.org
 BuildArch:      noarch
 
@@ -64,8 +64,8 @@ Requires:       dconf
 # dconf/posttrans, sem remover o pacote.
 
 %description
-Pacote de identidade visual do CapivaraOS Snout 2.0.0 (preview): wallpapers (incluindo as
-fotos de capivaras do Wikimedia Commons, CC BY-SA), conjunto de ícones
+Pacote de identidade visual do CapivaraOS Snout 2.0.0 (preview): wallpapers da
+marca da série 2.x (os mesmos do Marsh 2.0), conjunto de ícones
 "capivaraos-logo" e "capivaraos-full-logo", tema Plymouth de boot, tela de
 login GDM, /etc/os-release, /etc/issue e wallpaper padrão do GNOME (via
 dconf), com o GNOME Shell padrão (sem customizações de layout).
@@ -160,16 +160,21 @@ done
 
 %install
 set -e
-DEFAULT_WP=%{_datadir}/backgrounds/capivaraos/capivaraos-desktop.png
+# Wallpaper padrao da serie 2.x: "Luar" (moonlight), o MESMO padrao do Marsh 2.0
+# (consistencia de marca entre as spins). Escuro, casa com o tema padrao do GNOME.
+DEFAULT_WP=%{_datadir}/backgrounds/capivaraos/capivaraos-wp-moonlight.png
 
 # ── Wallpapers ───────────────────────────────────────────────────────────────
+# Serie 2.x: so os 8 wallpapers da marca (capivaraos-wp-*.png, os MESMOS do
+# Marsh 2.0). O conjunto do Snout 1.x (fotos CC BY-SA + variantes de cor) foi
+# removido; os wallpapers "padrao" continuam vindo do gnome-backgrounds da base.
+# CapivaraOS_Logo.png fica na pasta so como FONTE de pixmaps/plymouth (nao e
+# papel de parede), por isso e pulado aqui.
 install -d %{buildroot}%{_datadir}/backgrounds/capivaraos
-# Todos os wallpapers (incluindo fotos já em 4:3 nativas 1920×1440): direto da fonte
 for WP in backgrounds/*.png; do
     [ "$(basename "$WP")" = "CapivaraOS_Logo.png" ] && continue
     install -m 0644 "$WP" %{buildroot}%{_datadir}/backgrounds/capivaraos/
 done
-install -m 0644 backgrounds/CREDITOS.txt %{buildroot}%{_datadir}/backgrounds/capivaraos/
 
 # ── Pixmaps ──────────────────────────────────────────────────────────────────
 install -d %{buildroot}%{_datadir}/pixmaps
@@ -198,69 +203,45 @@ cat > %{buildroot}%{_datadir}/gnome-background-properties/capivaraos.xml << 'EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
 <wallpapers>
+  <!-- Conjunto da marca da serie 2.x (o MESMO do Marsh 2.0). "Luar" e o padrao. -->
   <wallpaper deleted="false">
-    <name>CapivaraOS Azul</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop.png</filename>
+    <name>CapivaraOS Luar</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-moonlight.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Verde</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-verde.png</filename>
+    <name>CapivaraOS Pôr do Sol</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-sunset.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Roxo</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-roxo.png</filename>
+    <name>CapivaraOS Dev</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-dev.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Preto</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-preto.png</filename>
+    <name>CapivaraOS Quadrinhos</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-comics.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Azul (logo branca)</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-azul-branco.png</filename>
+    <name>CapivaraOS Abstrato 1</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-abstract-1.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Verde (logo branca)</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-verde-branco.png</filename>
+    <name>CapivaraOS Abstrato 2</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-abstract-2.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Roxo (logo branca)</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-roxo-branco.png</filename>
+    <name>CapivaraOS Abstrato 3</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-abstract-3.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Ipê Rosa</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-ipe.png</filename>
-    <options>zoom</options>
-  </wallpaper>
-  <wallpaper deleted="false">
-    <name>CapivaraOS Retrato</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-capincho.png</filename>
-    <options>zoom</options>
-  </wallpaper>
-  <wallpaper deleted="false">
-    <name>CapivaraOS Taim</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-taim.png</filename>
-    <options>zoom</options>
-  </wallpaper>
-  <wallpaper deleted="false">
-    <name>CapivaraOS Natação</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-natacao.png</filename>
-    <options>zoom</options>
-  </wallpaper>
-  <wallpaper deleted="false">
-    <name>CapivaraOS Rio</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-salto.png</filename>
-    <options>zoom</options>
-  </wallpaper>
-  <wallpaper deleted="false">
-    <name>CapivaraOS Iberá</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-ibera.png</filename>
+    <name>CapivaraOS Abstrato 4</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-abstract-4.png</filename>
     <options>zoom</options>
   </wallpaper>
 </wallpapers>
@@ -762,7 +743,6 @@ for PAIR in \
 done
 
 %files
-%license backgrounds/CREDITOS.txt
 %{_datadir}/backgrounds/capivaraos/
 %{_datadir}/pixmaps/capivaraos.png
 %{_datadir}/pixmaps/capivaraos-logo.png
@@ -794,6 +774,13 @@ done
   Versionamento pre-release "0.N.alphaN.snout"; "2.0.0-1.snout" reservado p/ o
   lancamento publico conjunto das 3 spins (PROD-61). SMOKE BUILD p/ levantar
   quebras (GNOME/GDM no F45, Anaconda 45) — NAO cortar ISO publica do F45 antes do GA.
+- Wallpapers da marca da serie 2.x (PROD-115): so os MESMOS 8 do Marsh 2.0 (Luar,
+  Por do Sol, Dev, Quadrinhos, Abstrato 1-4), empacotados e registrados no seletor
+  de fundo do GNOME; padrao passa a ser "Luar" (moonlight), igual ao Marsh. O
+  conjunto proprio do Snout 1.x (7 fotos CC BY-SA do Wikimedia + variantes de cor +
+  capivaraos-wallpaper.png) foi REMOVIDO do 2.x; os wallpapers "padrao" seguem vindo
+  do gnome-backgrounds da base. Removidos tambem CREDITOS.txt (era das fotos) e os
+  scripts regen-photo/solid-wallpapers.sh; tags CC-BY-SA saem da License.
 
 * Sat Aug 22 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 1.1.15-1
 - CORRIGE a tela de login (BUG-42): sem autologin, o GDM nao mostrava a tela de
