@@ -373,6 +373,23 @@ class Backend(GObject.Object):
         got = [l.capitalize() for l in LANG_TRACKS if self._lang_installed(l)]
         return ", ".join(got)
 
+    def installed_lang_keys(self):
+        """Chaves das trilhas já instaladas (p/ pré-marcar na folha de seleção)."""
+        return [l for l in LANG_TRACKS if self._lang_installed(l)]
+
+    def installed_tool_keys(self):
+        """Chaves das ferramentas de dev já instaladas (p/ pré-marcar)."""
+        got = []
+        if shutil.which("code"):
+            got.append("vscode")
+        if self._cline_installed():
+            got.append("cline")
+        if self._openwebui_present():
+            got.append("openwebui")
+        if shutil.which("docker"):
+            got.append("docker")
+        return got
+
     def installed_dev_tools(self) -> str:
         got = []
         if shutil.which("code"):

@@ -259,7 +259,8 @@ class MainWindow(Adw.ApplicationWindow):
              "usuário; abra um novo terminal depois de instalar."),
             [("node", "Web / JavaScript (Node.js)"), ("python", "Python"),
              ("go", "Go"), ("rust", "Rust"), ("java", "Java")],
-            "Instalando trilhas de linguagem", self.backend.install_lang_tracks)
+            "Instalando trilhas de linguagem", self.backend.install_lang_tracks,
+            installed=self.backend.installed_lang_keys())
 
     def _open_tools(self):
         self._selection_dialog(
@@ -270,10 +271,13 @@ class MainWindow(Adw.ApplicationWindow):
              ("cline", "Cline — IA agentic no editor (code/codium)"),
              ("openwebui", "Open WebUI — chat web do Ollama (podman)"),
              ("docker", "Docker CE — containers")],
-            "Instalando ferramentas de dev", self.backend.install_dev_tools)
+            "Instalando ferramentas de dev", self.backend.install_dev_tools,
+            installed=self.backend.installed_tool_keys())
 
     # ---- Diálogo de seleção múltipla (trilhas / ferramentas) -------------
-    def _selection_dialog(self, title, subtitle, items, progress_title, run):
+    def _selection_dialog(self, title, subtitle, items, progress_title, run,
+                          installed=None):
+        installed = set(installed or [])
         dialog = Adw.Dialog(title=title)
         dialog.set_content_width(460)
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
@@ -288,8 +292,17 @@ class MainWindow(Adw.ApplicationWindow):
             row = Adw.ActionRow(title=label)
             chk = Gtk.CheckButton(valign=Gtk.Align.CENTER)
             row.add_prefix(chk)
-            row.set_activatable_widget(chk)
             checks[key] = chk
+            if key in installed:
+                # Já instalado: aparece marcado e travado, com o rótulo à direita.
+                chk.set_active(True)
+                chk.set_sensitive(False)
+                tag = Gtk.Label(label="instalado")
+                tag.add_css_class("dim-label")
+                tag.add_css_class("caption")
+                row.add_suffix(tag)
+            else:
+                row.set_activatable_widget(chk)
             group.add(row)
         box.append(group)
 
@@ -298,12 +311,15 @@ class MainWindow(Adw.ApplicationWindow):
         install.set_sensitive(False)
 
         def on_toggle(*_a):
-            install.set_sensitive(any(c.get_active() for c in checks.values()))
+            # Habilita só quando há algo NOVO marcado (fora o que já está instalado).
+            install.set_sensitive(any(c.get_active() and k not in installed
+                                      for k, c in checks.items()))
         for c in checks.values():
             c.connect("toggled", on_toggle)
 
         def on_install(*_a):
-            picks = [k for k, c in checks.items() if c.get_active()]
+            picks = [k for k, c in checks.items()
+                     if c.get_active() and k not in installed]
             dialog.close()
             self._open_progress(progress_title)
             run(picks)
