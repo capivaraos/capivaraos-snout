@@ -151,7 +151,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.card_ai = Card(
             "IA local",
             ("Rode modelos de IA na sua máquina, sem nuvem: Ollama (motor), "
-             "Alpaca (interface) e a extensão Continue no VSCodium."),
+             "Alpaca (interface) e a extensão Continue no VSCodium. No Fedora 45 "
+             "o Ollama já inclui a aceleração AMD (ROCm) — baixa vários GB."),
             "system-run-symbolic", "Instalar IA local",
             self._install_ai, open_text="Abrir o Alpaca",
             on_open=self.backend.open_ai_local)
@@ -166,9 +167,10 @@ class MainWindow(Adw.ApplicationWindow):
         grp.add(self.card_langs.row)
 
         self.card_gpu = Card(
-            "Ligar GPU",
-            ("Acelere a IA local com sua placa de vídeo: ROCm (AMD) ou CUDA "
-             "(NVIDIA). Sem GPU dedicada, a IA continua rodando na CPU."),
+            "Ligar GPU (NVIDIA)",
+            ("Placa NVIDIA? Instale o driver + CUDA para acelerar a IA local. "
+             "AMD já vem acelerada (ROCm) junto com a IA local no Fedora 45. Sem "
+             "GPU dedicada, a IA continua rodando na CPU."),
             "video-display-symbolic", "Ativar GPU", self._enable_gpu)
         grp.add(self.card_gpu.row)
 
