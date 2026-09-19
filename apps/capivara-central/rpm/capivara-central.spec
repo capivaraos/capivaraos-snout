@@ -1,5 +1,5 @@
 Name:           capivara-central
-Version:        0.2.0
+Version:        0.2.1
 Release:        1%{?dist}.snout
 Summary:        COS Dev Center — onboarding do CapivaraOS Snout
 
@@ -89,6 +89,13 @@ install -Dm0644 data/org.capivaraos.Central-autostart.desktop \
 %{_sysconfdir}/skel/.config/autostart/org.capivaraos.Central.desktop
 
 %changelog
+* Sat Sep 19 2026 CapivaraOS Bot <capivaraos-bot@users.noreply.github.com> - 0.2.1-1.snout
+- Folha de seleção (Trilhas de linguagem / Ferramentas de dev) agora PRÉ-MARCA e
+  trava os itens já instalados (com o rótulo "instalado"), e o botão "Instalar
+  selecionadas" só habilita quando há um item NOVO marcado — não reinstala o que
+  já existe. Pedido no teste em VM da alpha2. Backend ganhou installed_lang_keys()
+  e installed_tool_keys(). (Validação da UI GTK do PROD-117 em VM: OK.)
+
 * Sat Sep 19 2026 CapivaraOS Bot <capivaraos-bot@users.noreply.github.com> - 0.2.0-1.snout
 - Port do COS Dev Center para o Snout (GNOME) — PROD-117. UI reescrita de
   QML/Kirigami para GTK4/libadwaita (Adw.NavigationView + PreferencesPage/
