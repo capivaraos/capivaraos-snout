@@ -1,0 +1,18 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Helper privilegiado do card "Atualizar o CapivaraOS" (FEAT-116). Roda como ROOT
+# via pkexec (polkit action org.capivaraos.central.system-upgrade). Invólucro
+# FINO sobre a ferramenta capivaraos-upgrade (FEAT-115), que faz o trabalho real
+# (pré-voo com falha fechada + snapshot snapper + dnf5 system-upgrade offline).
+# Aceita SÓ 'download' ou 'reboot' — nada mais é elevado por aqui.
+set -euo pipefail
+
+ACTION="${1:-}"
+UPG=/usr/bin/capivaraos-upgrade
+[ -x "$UPG" ] || { echo "ERRO: capivaraos-upgrade não encontrado ($UPG)." >&2; exit 1; }
+
+case "$ACTION" in
+    download) exec "$UPG" download --yes ;;
+    reboot)   exec "$UPG" reboot --yes ;;
+    *) echo "uso: upgrade-system download|reboot" >&2; exit 2 ;;
+esac

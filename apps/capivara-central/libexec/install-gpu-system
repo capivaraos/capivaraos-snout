@@ -1,0 +1,63 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Habilita a aceleração por GPU para a IA local (Ollama). Executado como ROOT
+# via pkexec (polkit action org.capivaraos.central.enable-gpu, que mapeia o
+# caminho deste arquivo). NÃO chamar direto; o app usa
+# /usr/libexec/capivara-central/setup-gpu.
+#
+# Detecta o fornecedor da GPU e instala o stack de computação adequado:
+#   - AMD    -> ROCm (repos do Fedora)
+#   - NVIDIA -> driver + CUDA (RPM Fusion nonfree; exige reinício p/ o akmod)
+# Depois reinicia o serviço do Ollama para que ele detecte a GPU.
+#
+# As linhas iniciadas por ">>> " viram o rótulo de passo grande no app.
+set -uo pipefail
+
+detect_vendor() {
+    local gpus
+    gpus="$(lspci -nn 2>/dev/null | grep -Ei 'VGA|3D|Display')" || true
+    if echo "$gpus" | grep -Eiq 'NVIDIA'; then echo nvidia; return; fi
+    if echo "$gpus" | grep -Eiq 'AMD|ATI|Radeon'; then echo amd; return; fi
+    echo unknown
+}
+
+# Só aceita um fornecedor conhecido vindo como argumento (defesa em profundidade
+# por rodar como root); qualquer outra coisa cai na autodetecção.
+case "${1:-}" in
+    amd|nvidia|unknown) VENDOR="$1" ;;
+    *)                  VENDOR="$(detect_vendor)" ;;
+esac
+echo ">>> GPU detectada: ${VENDOR}"
+
+FEDORA="$(rpm -E %fedora)"
+
+case "$VENDOR" in
+  amd)
+    echo ">>> Instalando o stack ROCm (AMD) — inferência via HIP"
+    dnf install -y rocminfo rocm-hip rocm-runtime \
+        || { echo "ERRO: falha ao instalar o ROCm."; exit 1; }
+    ;;
+  nvidia)
+    echo ">>> Habilitando RPM Fusion (free + nonfree) para o driver NVIDIA + CUDA"
+    dnf install -y \
+      "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${FEDORA}.noarch.rpm" \
+      "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${FEDORA}.noarch.rpm" \
+      || echo "AVISO: RPM Fusion talvez já esteja habilitado; seguindo."
+    echo ">>> Instalando o driver NVIDIA e as bibliotecas CUDA (pode demorar)"
+    dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda \
+        || { echo "ERRO: falha ao instalar o driver NVIDIA/CUDA."; exit 1; }
+    echo "NOTA: o módulo do kernel (akmod) é compilado após o próximo reinício."
+    echo "      REINICIE a máquina para concluir a ativação da GPU NVIDIA."
+    ;;
+  *)
+    echo "Não identifiquei uma GPU AMD ou NVIDIA dedicada."
+    echo "A IA local continua funcionando na CPU. Nada a instalar."
+    exit 0
+    ;;
+esac
+
+echo ">>> Reiniciando o serviço do Ollama para detectar a GPU"
+systemctl restart ollama.service \
+    || echo "AVISO: não consegui reiniciar o ollama agora (talvez não esteja instalado)."
+echo ">>> Etapa de administrador concluída"
+exit 0
