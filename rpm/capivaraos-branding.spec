@@ -39,8 +39,8 @@ Version:        2.0.0
 # "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
 # 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
 # atualiza "pra tras". Builds de dev saem rotulados "preview".
-Release:        0.1.alpha1%{?dist}.snout
-Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0
+Release:        0.2.alpha2%{?dist}.snout
+Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0 (preview)
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
 URL:            https://capivaraos.org
@@ -514,6 +514,49 @@ base_profile = fedora
 os_id = capivaraos
 EOF
 
+# ── Snapshots pré-upgrade: config 'root' do snapper criada no 1o boot ────────
+# O capivaraos-upgrade (PROD-116) só tira snapshot automático antes do upgrade
+# in-place se a raiz for btrfs E existir uma config 'root' do snapper. O pacote
+# snapper (ver %packages do kickstart) não cria essa config sozinho, e o
+# instalador GNOME não a configura. Então um oneshot de 1o boot a cria no
+# sistema INSTALADO (na live a raiz não é btrfs -> o script sai sem fazer nada).
+# ConditionPathExists=!... faz o systemd pular o serviço depois de criada.
+install -d %{buildroot}%{_libexecdir}/capivaraos
+cat > %{buildroot}%{_libexecdir}/capivaraos/snapper-firstboot << 'EOF'
+#!/bin/bash
+# Cria a config 'root' do snapper se a raiz for btrfs e ainda não existir.
+# Idempotente; pensado para rodar uma vez no 1o boot do sistema instalado.
+set -e
+[ "$(findmnt -no FSTYPE /)" = btrfs ] || exit 0
+command -v snapper >/dev/null 2>&1 || exit 0
+snapper list-configs 2>/dev/null | grep -qw root && exit 0
+snapper -c root create-config /
+# Limites conservadores: sem timeline automática (não encher o disco); mantém
+# os snapshots numerados (os pré/pós de transação e o do capivaraos-upgrade).
+snapper -c root set-config TIMELINE_CREATE=no NUMBER_CLEANUP=yes NUMBER_LIMIT=10 NUMBER_LIMIT_IMPORTANT=10 || true
+systemctl enable --now snapper-cleanup.timer >/dev/null 2>&1 || true
+EOF
+chmod 0755 %{buildroot}%{_libexecdir}/capivaraos/snapper-firstboot
+
+install -d %{buildroot}%{_unitdir}
+cat > %{buildroot}%{_unitdir}/capivaraos-snapper-setup.service << 'EOF'
+[Unit]
+Description=CapivaraOS: cria a configuracao snapper 'root' no 1o boot (btrfs)
+Documentation=https://capivaraos.org
+# Pula assim que a config existir (nada de stamp); e so em raiz btrfs.
+ConditionPathExists=!/etc/snapper/configs/root
+After=local-fs.target
+Before=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/capivaraos/snapper-firstboot
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 %post
 # Splash de boot CapivaraOS
 plymouth-set-default-theme capivaraos >/dev/null 2>&1 || true
@@ -609,18 +652,23 @@ Theme=capivaraos
 EOF
 plymouth-set-default-theme capivaraos >/dev/null 2>&1 || true
 
+# Habilita o oneshot que cria a config 'root' do snapper no 1o boot (PROD-116).
+# %posttrans roda com systemd/snapper ja instalados; o enable offline apenas cria
+# o symlink WantedBy — o servico so age no 1o boot do sistema instalado (btrfs).
+systemctl enable capivaraos-snapper-setup.service >/dev/null 2>&1 || true
+
 # /etc/os-release, /etc/issue, /etc/issue.net (fedora-release-common):
 # escritos aqui (em vez de %files) para evitar conflito de arquivo no dnf.
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha1, preview)"
+VERSION="Snout 2.0.0 (alpha2, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha1, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha2, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-full-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -633,17 +681,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha1, preview)"
+VARIANT="Snout 2.0.0 (alpha2, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha1, preview) \n \l
+CapivaraOS Snout 2.0.0 (alpha2, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha1, preview)
+CapivaraOS Snout 2.0.0 (alpha2, preview)
 EOF
 
 # ── Reaplica os-release apos qualquer atualizacao futura do sistema ────────
@@ -667,14 +715,14 @@ EOF
 grep -q '^NAME="CapivaraOS"' %{_prefix}/lib/os-release 2>/dev/null && exit 0
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha1, preview)"
+VERSION="Snout 2.0.0 (alpha2, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha1, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha2, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-full-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -687,17 +735,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha1, preview)"
+VARIANT="Snout 2.0.0 (alpha2, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha1, preview) \n \l
+CapivaraOS Snout 2.0.0 (alpha2, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha1, preview)
+CapivaraOS Snout 2.0.0 (alpha2, preview)
 EOF
 
 for kver in $(ls /lib/modules 2>/dev/null); do
@@ -762,15 +810,26 @@ done
 %config(noreplace) %{_sysconfdir}/dconf/profile/gdm
 %config(noreplace) %{_sysconfdir}/dconf/db/gdm.d/01-capivaraos-background
 %{_sysconfdir}/anaconda/profile.d/capivaraos.conf
+%{_libexecdir}/capivaraos/snapper-firstboot
+%{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Fri Sep 18 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.2.alpha2
+- Snapshots "atualize sem medo" (PROD-116): o Snout 2.x passa a criar a config
+  'root' do snapper no 1o boot (oneshot capivaraos-snapper-setup.service +
+  /usr/libexec/capivaraos/snapper-firstboot), em raiz btrfs. Sem isso o
+  capivaraos-upgrade nao tirava snapshot automatico antes do upgrade in-place
+  (so instalar o pacote snapper, como o Marsh faz, nao basta — falta a config).
+  Na sessao live e no-op (raiz nao e btrfs). Pacotes snapper + btrfs-assistant
+  entram pelo %packages do kickstart. Falta validar em VM instalada.
+
 * Fri Sep 18 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.1.alpha1
 - Primeira build da serie 2.x do Snout: rebase para Fedora 45 (base do 2.0) — PROD-114.
   O F45 Beta saiu (2026-09-18). Repo novo capivaraos-snout-next (clonado do
   capivaraos-snout-fedora p/ preservar a base GNOME + o fix do BUG-42), branch
   rebase-f45. Repoint do compose: build-all.sh --releasever=45, base do kickstart
   f44 -> f45 (fedora-45/updates-released-f45), trava de updates em 45. os-release/
-  issue -> Fedora 45 + "Snout 2.0.0 (alpha1, preview)". Snout CONTINUA GNOME.
+  issue -> Fedora 45 + "Snout 2.0.0 (alpha2, preview)". Snout CONTINUA GNOME.
   Versionamento pre-release "0.N.alphaN.snout"; "2.0.0-1.snout" reservado p/ o
   lancamento publico conjunto das 3 spins (PROD-61). SMOKE BUILD p/ levantar
   quebras (GNOME/GDM no F45, Anaconda 45) — NAO cortar ISO publica do F45 antes do GA.

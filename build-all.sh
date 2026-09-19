@@ -16,7 +16,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR=/var/tmp/capivaraos-snout-repo
 RESULT_DIR=/var/tmp/capivaraos-snout-result
-ISO_NAME=CapivaraOS-Snout-2.0.0-alpha1-x86_64.iso
+ISO_NAME=CapivaraOS-Snout-2.0.0-alpha2-x86_64.iso
 
 echo "==> 1/4: Instalando dependências (lorax, rpm-build, ImageMagick, git, createrepo_c)..."
 sudo dnf install -y lorax rpm-build ImageMagick git createrepo_c
@@ -61,7 +61,7 @@ sudo livemedia-creator --ks="$FLAT_KS" \
     --logfile="$LIVEMEDIA_LOG" \
     --project="CapivaraOS Snout" --make-iso --iso-only \
     --iso-name="$ISO_NAME" \
-    --volid="CapivaraOS Snout 2.0.0 alpha1" --variant="CapivaraOS Snout" \
+    --volid="CapivaraOS Snout 2.0.0 alpha2" --variant="CapivaraOS Snout" \
     --releasever=45
 
 # ── Trava contra ISO sem os updates do Fedora (BUG-29) ─────────────────────
