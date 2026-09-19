@@ -101,6 +101,10 @@ git
 nano
 vim-enhanced
 @development-tools
+# COS Dev Center: app de onboarding de 1o boot (GTK4/libadwaita) que liga os
+# extras opcionais da estacao de dev em um clique (IA local, trilhas, GPU,
+# ferramentas, gh) e o "Atualizar o CapivaraOS" (PROD-116/117).
+capivara-central
 
 # ===== FONTES =====
 liberation-fonts

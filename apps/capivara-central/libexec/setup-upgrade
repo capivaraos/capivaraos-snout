@@ -1,0 +1,25 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Orquestrador do card "Atualizar o CapivaraOS" (FEAT-116). Roda como USUÁRIO;
+# eleva por pkexec (polkit org.capivaraos.central.system-upgrade) o helper de
+# sistema, que chama a ferramenta capivaraos-upgrade. Aceita 'download' (baixa a
+# transação, sem reiniciar) ou 'reboot' (aplica: reinicia no modo offline).
+# As linhas iniciadas por ">>> " viram o rótulo de passo grande no app.
+set -uo pipefail
+
+ACTION="${1:-download}"
+SYS_HELPER=/usr/libexec/capivara-central/upgrade-system
+
+command -v capivaraos-upgrade >/dev/null 2>&1 || {
+    echo "ERRO: a ferramenta de atualização (capivaraos-upgrade) não está instalada."
+    exit 1
+}
+[ -x "$SYS_HELPER" ] || { echo "ERRO: helper de administrador ausente ($SYS_HELPER)."; exit 1; }
+
+case "$ACTION" in
+    download) echo ">>> Baixando a atualização (pode pedir sua senha)" ;;
+    reboot)   echo ">>> Reiniciando para aplicar a atualização (pode pedir sua senha)" ;;
+    *) echo "uso: setup-upgrade download|reboot"; exit 2 ;;
+esac
+
+pkexec "$SYS_HELPER" "$ACTION"

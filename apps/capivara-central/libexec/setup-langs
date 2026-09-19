@@ -1,0 +1,55 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Instala trilhas de linguagem via mise (https://mise.jdx.dev) — gerenciador de
+# versões POR USUÁRIO. Roda como o usuário logado; NÃO precisa de root/polkit
+# (o mise instala em ~/.local e as runtimes em ~/.local/share/mise).
+#
+# Uso: setup-langs <lang> [<lang> ...]   (ex.: setup-langs node python go)
+# As linguagens são ids de ferramenta do mise: node, python, go, rust, java.
+# As linhas iniciadas por ">>> " viram o rótulo de passo grande no app.
+set -uo pipefail
+
+export PATH="$HOME/.local/bin:$PATH"
+# Não pedir confirmação interativa em nenhum passo do mise.
+export MISE_YES=1
+
+if [ "$#" -eq 0 ]; then
+    echo "Nenhuma linguagem informada."
+    exit 1
+fi
+
+# --- Garante o mise instalado (idempotente) --------------------------------
+if ! command -v mise >/dev/null 2>&1; then
+    echo ">>> Instalando o mise (gerenciador de versões)"
+    if ! curl -fsSL https://mise.run | sh; then
+        echo "ERRO: não consegui instalar o mise (verifique a conexão)."
+        exit 1
+    fi
+fi
+
+MISE="$HOME/.local/bin/mise"
+command -v "$MISE" >/dev/null 2>&1 || MISE=mise
+
+# --- Ativa o mise no shell do usuário (idempotente) ------------------------
+if ! grep -qF "mise activate bash" "$HOME/.bashrc" 2>/dev/null; then
+    echo '' >> "$HOME/.bashrc"
+    echo '# CapivaraOS COS Dev Center — trilhas de linguagem (mise)' >> "$HOME/.bashrc"
+    echo 'eval "$("'"$MISE"'" activate bash)"' >> "$HOME/.bashrc"
+fi
+
+# --- Instala cada trilha selecionada ---------------------------------------
+rc=0
+for lang in "$@"; do
+    echo ">>> Instalando trilha: ${lang}"
+    if ! "$MISE" use --global "${lang}@latest"; then
+        echo "AVISO: não consegui instalar a trilha '${lang}'."
+        rc=1
+    fi
+done
+
+if [ "$rc" -eq 0 ]; then
+    echo ">>> Trilhas instaladas! Abra um novo terminal para começar a usá-las."
+else
+    echo ">>> Concluído com avisos — veja acima as trilhas que falharam."
+fi
+exit "$rc"

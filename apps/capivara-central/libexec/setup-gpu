@@ -1,0 +1,27 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Liga a aceleração por GPU para a IA local. A parte de root (dnf/systemctl) é
+# elevada por pkexec, casando com a polkit action
+# org.capivaraos.central.enable-gpu. Roda como o usuário logado.
+#
+# As linhas iniciadas por ">>> " viram o rótulo de passo grande no app.
+set -uo pipefail
+
+SYS_HELPER=/usr/libexec/capivara-central/install-gpu-system
+
+echo ">>> Preparando a ativação da GPU (pode pedir sua senha)"
+if [ -x "$SYS_HELPER" ]; then
+    pkexec "$SYS_HELPER"
+    rc=$?
+else
+    echo "ERRO: helper de administrador não encontrado em $SYS_HELPER"
+    rc=1
+fi
+
+if [ "$rc" -ne 0 ]; then
+    echo "A ativação da GPU falhou (código $rc)."
+    exit "$rc"
+fi
+
+echo ">>> GPU configurada. Se você tem NVIDIA, reinicie para concluir."
+exit 0

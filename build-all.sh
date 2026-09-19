@@ -21,8 +21,9 @@ ISO_NAME=CapivaraOS-Snout-2.0.0-alpha2-x86_64.iso
 echo "==> 1/4: Instalando dependências (lorax, rpm-build, ImageMagick, git, createrepo_c)..."
 sudo dnf install -y lorax rpm-build ImageMagick git createrepo_c
 
-echo "==> 2/4: Construindo RPM capivaraos-branding..."
+echo "==> 2/4: Construindo RPMs (capivaraos-branding + capivara-central)..."
 "$SCRIPT_DIR/rpm/build-rpm.sh"
+"$SCRIPT_DIR/apps/capivara-central/rpm/build-rpm.sh"
 
 echo "==> 3/4: Criando repositório local em ${REPO_DIR}..."
 # BUG CORRIGIDO (build anterior): ~/rpmbuild/RPMS/noarch/ acumula RPMs
@@ -35,12 +36,17 @@ echo "==> 3/4: Criando repositório local em ${REPO_DIR}..."
 # Agora resolvemos a NEVRA EXATA deste spec (Version E Release) via
 # "rpmspec -q", garantindo que copiamos só o RPM desta spin, independente
 # do que mais estiver no diretório compartilhado.
-NEVRA=$(rpmspec -q --qf '%{name}-%{version}-%{release}.%{arch}\n' "$SCRIPT_DIR/rpm/capivaraos-branding.spec" | head -1)
-RPM_FILE="$HOME/rpmbuild/RPMS/noarch/${NEVRA}.rpm"
-[ -f "$RPM_FILE" ] || { echo "ERRO: RPM esperado não encontrado: ${RPM_FILE}" >&2; exit 1; }
 sudo rm -rf "$REPO_DIR"
 mkdir -p "$REPO_DIR"
-cp -v "$RPM_FILE" "$REPO_DIR/"
+# Resolve a NEVRA EXATA de cada spec (Version E Release) e copia só o RPM desta
+# spin — independente do que mais esteja no ~/rpmbuild/RPMS compartilhado.
+for SPEC in "$SCRIPT_DIR/rpm/capivaraos-branding.spec" \
+            "$SCRIPT_DIR/apps/capivara-central/rpm/capivara-central.spec"; do
+    NEVRA=$(rpmspec -q --qf '%{name}-%{version}-%{release}.%{arch}\n' "$SPEC" | head -1)
+    RPM_FILE="$HOME/rpmbuild/RPMS/noarch/${NEVRA}.rpm"
+    [ -f "$RPM_FILE" ] || { echo "ERRO: RPM esperado não encontrado: ${RPM_FILE}" >&2; exit 1; }
+    cp -v "$RPM_FILE" "$REPO_DIR/"
+done
 createrepo_c "$REPO_DIR"
 
 echo "==> 4/4: Gerando ISO com livemedia-creator (pode levar bastante tempo)..."

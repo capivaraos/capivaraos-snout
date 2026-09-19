@@ -2,9 +2,8 @@
 # =============================================================================
 # build-updates.sh — pipeline de updates contínuos do CapivaraOS (FEAT-114).
 # =============================================================================
-# Reconstrói os RPMs PRÓPRIOS do desktop (no Snout 2.x: branding, repos e
-# upgrade — o COS Dev Center entra na PROD-117) e, opcionalmente, os assina e
-# adiciona ao canal `testing` do repo
+# Reconstrói os RPMs PRÓPRIOS do desktop (branding, COS Dev Center, repos e
+# upgrade) e, opcionalmente, os assina e adiciona ao canal `testing` do repo
 # assinado da versão corrente (via publish-repo.sh). Fluxo completo:
 #
 #   ./build-updates.sh                 # só builda os 4 (não precisa da chave)
@@ -39,12 +38,10 @@ done
 # Pares (spec | script de build) dos pacotes próprios do desktop.
 SPECS=(
     "${SCRIPT_DIR}/rpm/capivaraos-branding.spec|${SCRIPT_DIR}/rpm/build-rpm.sh"
+    "${SCRIPT_DIR}/apps/capivara-central/rpm/capivara-central.spec|${SCRIPT_DIR}/apps/capivara-central/rpm/build-rpm.sh"
     "${SCRIPT_DIR}/rpm/capivaraos-repos.spec|${SCRIPT_DIR}/rpm/build-rpm-repos.sh"
     "${SCRIPT_DIR}/rpm/capivaraos-upgrade.spec|${SCRIPT_DIR}/rpm/build-rpm-upgrade.sh"
 )
-# NOTA (Snout 2.x): o COS Dev Center (capivara-central) ainda NÃO existe aqui —
-# entra quando a PROD-117 (port GTK4/libadwaita) for feita; então acrescente
-# apps/capivara-central/... a este array. Por ora, 3 pacotes próprios.
 
 echo "==> Reconstruindo os pacotes próprios do desktop (updates da versão corrente)…"
 for pair in "${SPECS[@]}"; do
