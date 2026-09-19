@@ -1,5 +1,5 @@
 Name:           capivara-central
-Version:        0.2.1
+Version:        0.2.2
 Release:        1%{?dist}.snout
 Summary:        COS Dev Center — onboarding do CapivaraOS Snout
 
@@ -89,6 +89,16 @@ install -Dm0644 data/org.capivaraos.Central-autostart.desktop \
 %{_sysconfdir}/skel/.config/autostart/org.capivaraos.Central.desktop
 
 %changelog
+* Sat Sep 19 2026 CapivaraOS Bot <capivaraos-bot@users.noreply.github.com> - 0.2.2-1.snout
+- Guard de "instalação em andamento": as ações que usam dnf (IA local, GPU,
+  ferramentas de dev, gh, download do upgrade) falham RÁPIDO com aviso claro se já
+  houver uma transação dnf em curso, em vez de ficar preso em "Waiting for a lock"
+  (achado do teste: a IA local, pesada por ROCm no F45, ainda rodava). Novo
+  Backend._dnf_busy() via pgrep.
+- IA local: descrição avisa que no F45 o Ollama já inclui a aceleração AMD (ROCm)
+  e baixa vários GB (decisão Opção 1). Card "Ligar GPU" refocado em NVIDIA/CUDA
+  (AMD já vem com a IA local). Ver reference_ollama_rocm_f45 — revisar no GA do F45.
+
 * Sat Sep 19 2026 CapivaraOS Bot <capivaraos-bot@users.noreply.github.com> - 0.2.1-1.snout
 - Folha de seleção (Trilhas de linguagem / Ferramentas de dev) agora PRÉ-MARCA e
   trava os itens já instalados (com o rótulo "instalado"), e o botão "Instalar

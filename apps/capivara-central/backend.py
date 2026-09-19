@@ -96,9 +96,23 @@ class Backend(GObject.Object):
             self.emit("busy-changed", value)
 
     # ---- Ações -----------------------------------------------------------
+    @staticmethod
+    def _dnf_busy() -> bool:
+        """True se já houver uma transação dnf de sistema em curso. Evita disparar
+        um segundo install que ficaria preso em 'Waiting for a lock' (aconteceu no
+        teste: a IA local, pesada por causa do ROCm, ainda rodava)."""
+        try:
+            r = subprocess.run(
+                ["pgrep", "-f", r"dnf.*(install|upgrade|remove|reinstall|system-upgrade)"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+            return r.returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            return False
+
     def install_ai_local(self):
         """Instala o pacote de IA local: Ollama + Alpaca + extensão Continue."""
-        self._run(_helper("setup-ai"), step="Preparando instalação da IA local…")
+        self._run(_helper("setup-ai"), step="Preparando instalação da IA local…",
+                  guard_dnf=True)
 
     def open_ai_local(self):
         """Abre o Alpaca (interface gráfica da IA local), sem caçar no menu."""
@@ -117,7 +131,8 @@ class Backend(GObject.Object):
 
     def enable_gpu(self):
         """Liga a aceleração por GPU (ROCm/AMD ou CUDA/NVIDIA) para o Ollama."""
-        self._run(_helper("setup-gpu"), step="Preparando a ativação da GPU…")
+        self._run(_helper("setup-gpu"), step="Preparando a ativação da GPU…",
+                  guard_dnf=True)
 
     def install_dev_tools(self, tools):
         """Instala ferramentas de dev (VS Code/Cline/Open WebUI/Docker CE)."""
@@ -127,11 +142,12 @@ class Backend(GObject.Object):
             self.emit("finished", False, "Nenhuma ferramenta selecionada.")
             return
         self._run(_helper("setup-devtools"),
-                  step="Preparando ferramentas de dev…", args=picks)
+                  step="Preparando ferramentas de dev…", args=picks, guard_dnf=True)
 
     def setup_gh(self):
         """Instala/configura gh + pre-commit (template global de hooks)."""
-        self._run(_helper("setup-gh"), step="Configurando gh + pre-commit…")
+        self._run(_helper("setup-gh"), step="Configurando gh + pre-commit…",
+                  guard_dnf=True)
 
     def open_gh_login(self):
         """Abre um terminal para o login interativo no GitHub (gh auth login).
@@ -206,7 +222,7 @@ class Backend(GObject.Object):
         system-upgrade download). Não reinicia."""
         self._run(_helper("setup-upgrade"),
                   step="Baixando a atualização do CapivaraOS…",
-                  args=["download"], kind="upgrade-download")
+                  args=["download"], kind="upgrade-download", guard_dnf=True)
 
     def reboot_upgrade(self):
         """Aplica: reinicia no modo offline. Passo terminal — a máquina reinicia."""
@@ -215,9 +231,17 @@ class Backend(GObject.Object):
                   args=["reboot"], kind="upgrade-reboot")
 
     # ---- Execução com streaming ------------------------------------------
-    def _run(self, program: str, step: str = "", args=None, kind: str = ""):
+    def _run(self, program: str, step: str = "", args=None, kind: str = "",
+             guard_dnf: bool = False):
         if self._busy:
             self.emit("log-line", "Já há uma tarefa em andamento; aguarde terminar.")
+            return
+        if guard_dnf and self._dnf_busy():
+            msg = ("Já há uma instalação de sistema em andamento (dnf). Aguarde "
+                   "ela terminar e tente de novo — evita conflito no gerenciador "
+                   "de pacotes.")
+            self.emit("log-line", msg)
+            self.emit("finished", False, msg)
             return
         self._action = kind
         if step:
