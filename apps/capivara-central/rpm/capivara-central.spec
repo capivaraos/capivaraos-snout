@@ -1,5 +1,5 @@
 Name:           capivara-central
-Version:        0.2.2
+Version:        0.2.3
 Release:        1%{?dist}.snout
 Summary:        COS Dev Center — onboarding do CapivaraOS Snout
 
@@ -89,6 +89,16 @@ install -Dm0644 data/org.capivaraos.Central-autostart.desktop \
 %{_sysconfdir}/skel/.config/autostart/org.capivaraos.Central.desktop
 
 %changelog
+* Mon Sep 21 2026 CapivaraOS Bot <capivaraos-bot@users.noreply.github.com> - 0.2.3-1.snout
+- Ícone do COS Dev regenerado do master de fundo TRANSPARENTE
+  (brand-assets/cos-dev-icon.png), sem xadrez/fundo — tamanhos 48/64/128/256/512.
+  Portado do Pup 2.x (asset de marca comum às 3 spins).
+- Fix do Docker no Fedora recém-lançado (install-devtools-system): o repo do Docker
+  demora a publicar o dir da versão nova (F45 = 404); a função install_docker agora
+  sonda fed..fed-3 por curl e fixa o baseurl na versão mais recente publicada, ou
+  avisa e segue sem derrubar o card (podman continua disponível). Portado do Pup 2.x.
+  Ver reference_docker_ce_fedora_novo — revisar no GA do F45.
+
 * Sat Sep 19 2026 CapivaraOS Bot <capivaraos-bot@users.noreply.github.com> - 0.2.2-1.snout
 - Guard de "instalação em andamento": as ações que usam dnf (IA local, GPU,
   ferramentas de dev, gh, download do upgrade) falham RÁPIDO com aviso claro se já
