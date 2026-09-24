@@ -39,7 +39,7 @@ Version:        2.0.0
 # "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
 # 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
 # atualiza "pra tras". Builds de dev saem rotulados "preview".
-Release:        0.3.alpha3%{?dist}.snout
+Release:        0.4.alpha4%{?dist}.snout
 Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0 (preview)
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
@@ -562,6 +562,20 @@ ExecStart=/usr/libexec/capivaraos/snapper-firstboot
 WantedBy=multi-user.target
 EOF
 
+# ── Logo próprio do fastfetch (FEAT-138 [Snout] / FEAT-50) ────────────────────
+# O fastfetch mostra o logo ASCII do Fedora (escolhido por ID_LIKE do os-release).
+# Trocamos pela cabeça de capivara da marca + "CapivaraOS" em verde. A arte vai
+# em /usr/share/capivaraos/fastfetch/ e o config.jsonc (só o LOGO, sem mexer nos
+# módulos) em /etc/skel E /etc/xdg -- este ultimo p/ valer na sessao LIVE
+# (fastfetch le XDG_CONFIG_DIRS=/etc/xdg). Sem auto-run (terminal limpo, decisão
+# do dono): o logo só aparece ao rodar `fastfetch`. Portado do Marsh (FEAT-136).
+install -d %{buildroot}%{_datadir}/capivaraos/fastfetch
+install -m 0644 fastfetch/capivara.txt %{buildroot}%{_datadir}/capivaraos/fastfetch/capivara.txt
+for FDIR in %{buildroot}%{_sysconfdir}/skel/.config %{buildroot}%{_sysconfdir}/xdg; do
+    install -d "$FDIR/fastfetch"
+    install -m 0644 fastfetch/config.jsonc "$FDIR/fastfetch/config.jsonc"
+done
+
 %post
 # Splash de boot CapivaraOS
 plymouth-set-default-theme capivaraos >/dev/null 2>&1 || true
@@ -666,14 +680,14 @@ systemctl enable capivaraos-snapper-setup.service >/dev/null 2>&1 || true
 # escritos aqui (em vez de %files) para evitar conflito de arquivo no dnf.
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha3, preview)"
+VERSION="Snout 2.0.0 (alpha4, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha3, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha4, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-full-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -686,17 +700,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha3, preview)"
+VARIANT="Snout 2.0.0 (alpha4, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha3, preview) \n \l
+CapivaraOS Snout 2.0.0 (alpha4, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha3, preview)
+CapivaraOS Snout 2.0.0 (alpha4, preview)
 EOF
 
 # ── Reaplica os-release apos qualquer atualizacao futura do sistema ────────
@@ -720,14 +734,14 @@ EOF
 grep -q '^NAME="CapivaraOS"' %{_prefix}/lib/os-release 2>/dev/null && exit 0
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha3, preview)"
+VERSION="Snout 2.0.0 (alpha4, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha3, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha4, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-full-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -740,17 +754,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha3, preview)"
+VARIANT="Snout 2.0.0 (alpha4, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha3, preview) \n \l
+CapivaraOS Snout 2.0.0 (alpha4, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha3, preview)
+CapivaraOS Snout 2.0.0 (alpha4, preview)
 EOF
 
 for kver in $(ls /lib/modules 2>/dev/null); do
@@ -815,10 +829,21 @@ done
 %config(noreplace) %{_sysconfdir}/dconf/profile/gdm
 %config(noreplace) %{_sysconfdir}/dconf/db/gdm.d/01-capivaraos-background
 %{_sysconfdir}/anaconda/profile.d/capivaraos.conf
+%dir %{_datadir}/capivaraos
+%{_datadir}/capivaraos/fastfetch/
+%{_sysconfdir}/skel/.config/fastfetch/
+%{_sysconfdir}/xdg/fastfetch/
 %{_libexecdir}/capivaraos/snapper-firstboot
 %{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Thu Sep 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.4.alpha4
+- Logo próprio do CapivaraOS no fastfetch (FEAT-138/FEAT-50): substitui o logo ASCII
+  do Fedora pela capivara + "CapivaraOS" (verde #15B22C). Arte em
+  /usr/share/capivaraos/fastfetch/capivara.txt + config.jsonc (só o logo) em
+  /etc/skel/.config/fastfetch e /etc/xdg/fastfetch. Portado do Marsh (FEAT-136); sem
+  auto-run (terminal limpo) — aparece ao rodar `fastfetch`.
+
 * Mon Sep 21 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.3.alpha3
 - Wallpaper novo da marca "Série 2" (capivaraos-wp-serie2.png, 3840x2160) — o hero
   verde da série 2, portado do Pup 2.x (fonte brand-assets/). Entra no seletor de
@@ -839,7 +864,7 @@ done
   capivaraos-snout-fedora p/ preservar a base GNOME + o fix do BUG-42), branch
   rebase-f45. Repoint do compose: build-all.sh --releasever=45, base do kickstart
   f44 -> f45 (fedora-45/updates-released-f45), trava de updates em 45. os-release/
-  issue -> Fedora 45 + "Snout 2.0.0 (alpha3, preview)". Snout CONTINUA GNOME.
+  issue -> Fedora 45 + "Snout 2.0.0 (alpha4, preview)". Snout CONTINUA GNOME.
   Versionamento pre-release "0.N.alphaN.snout"; "2.0.0-1.snout" reservado p/ o
   lancamento publico conjunto das 3 spins (PROD-61). SMOKE BUILD p/ levantar
   quebras (GNOME/GDM no F45, Anaconda 45) — NAO cortar ISO publica do F45 antes do GA.
