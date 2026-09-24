@@ -39,7 +39,7 @@ Version:        2.0.0
 # "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
 # 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
 # atualiza "pra tras". Builds de dev saem rotulados "preview".
-Release:        0.4.alpha4%{?dist}.snout
+Release:        0.5.alpha5%{?dist}.snout
 Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0 (preview)
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
@@ -97,6 +97,19 @@ for SIZE in 16 22 24 32 36 48 64 96 128 256 512; do
     "$CONVERT" backgrounds/CapivaraOS_Logo.png -background none -gravity center \
         -extent 1536x1536 -resize "${SIZE}x${SIZE}" \
         "build/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-full-logo.png"
+done
+
+# ── 2b. Ícone REDONDO navy "capivaraos-round-logo" (capivara branca + texto
+# num círculo azul-escuro) ──────────────────────────────────────────────────
+# É o que sobrescreve o "fedora-logo-icon" (logo da distro): aparece na tela de
+# boas-vindas do gnome-initial-setup e como ícone da distro no dock. Fonte:
+# icons/capivaraos-round-logo.png (já circular, cantos transparentes) -- só
+# redimensiona.
+for SIZE in 16 22 24 32 36 48 64 96 128 256 512; do
+    mkdir -p "build/icons/hicolor/${SIZE}x${SIZE}/apps"
+    "$CONVERT" icons/capivaraos-round-logo.png -background none \
+        -resize "${SIZE}x${SIZE}" \
+        "build/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-round-logo.png"
 done
 
 # ── 3. Ícone branco para a área de trabalho ("Instalar CapivaraOS" etc) ─────
@@ -190,6 +203,8 @@ for SIZE in 16 22 24 32 36 48 64 96 128 256 512; do
     install -m 0644 "build/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-logo.png" \
         %{buildroot}%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/
     install -m 0644 "build/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-full-logo.png" \
+        %{buildroot}%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/
+    install -m 0644 "build/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-round-logo.png" \
         %{buildroot}%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/
 done
 
@@ -620,7 +635,7 @@ fi
 # caminhos em %files (evita conflito de arquivo no dnf, mesmo princípio
 # usado para /etc/os-release).
 for SIZE in 16 22 24 32 36 48 64 96 128 256 512; do
-    SRC=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-full-logo.png
+    SRC=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-round-logo.png
     DST=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/fedora-logo-icon.png
     [ -f "$SRC" ] && [ -d "$(dirname "$DST")" ] && cp -f "$SRC" "$DST"
 done
@@ -680,14 +695,14 @@ systemctl enable capivaraos-snapper-setup.service >/dev/null 2>&1 || true
 # escritos aqui (em vez de %files) para evitar conflito de arquivo no dnf.
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha4, preview)"
+VERSION="Snout 2.0.0 (alpha5, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha4, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha5, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-full-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -700,17 +715,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha4, preview)"
+VARIANT="Snout 2.0.0 (alpha5, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha4, preview) \n \l
+CapivaraOS Snout 2.0.0 (alpha5, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha4, preview)
+CapivaraOS Snout 2.0.0 (alpha5, preview)
 EOF
 
 # ── Reaplica os-release apos qualquer atualizacao futura do sistema ────────
@@ -734,14 +749,14 @@ EOF
 grep -q '^NAME="CapivaraOS"' %{_prefix}/lib/os-release 2>/dev/null && exit 0
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha4, preview)"
+VERSION="Snout 2.0.0 (alpha5, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha4, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha5, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-full-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -754,17 +769,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha4, preview)"
+VARIANT="Snout 2.0.0 (alpha5, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha4, preview) \n \l
+CapivaraOS Snout 2.0.0 (alpha5, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha4, preview)
+CapivaraOS Snout 2.0.0 (alpha5, preview)
 EOF
 
 for kver in $(ls /lib/modules 2>/dev/null); do
@@ -786,10 +801,10 @@ done
 # /usr/share/icons/hicolor é mexido por muitos pacotes, então a guarda abaixo
 # faz o caso comum (nossa logo já no lugar) sair de imediato.
 %transfiletriggerin -- %{_datadir}/icons/hicolor
-cmp -s %{_datadir}/icons/hicolor/48x48/apps/capivaraos-full-logo.png \
+cmp -s %{_datadir}/icons/hicolor/48x48/apps/capivaraos-round-logo.png \
        %{_datadir}/icons/hicolor/48x48/apps/fedora-logo-icon.png && exit 0
 for SIZE in 16 22 24 32 36 48 64 96 128 256 512; do
-    SRC=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-full-logo.png
+    SRC=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-round-logo.png
     DST=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/fedora-logo-icon.png
     [ -f "$SRC" ] && [ -d "$(dirname "$DST")" ] && cp -f "$SRC" "$DST"
 done
@@ -818,6 +833,7 @@ done
 %{_datadir}/pixmaps/capivaraos-whitelogo-med.png
 %{_datadir}/icons/hicolor/*/apps/capivaraos-logo.png
 %{_datadir}/icons/hicolor/*/apps/capivaraos-full-logo.png
+%{_datadir}/icons/hicolor/*/apps/capivaraos-round-logo.png
 %{_datadir}/gnome-background-properties/capivaraos.xml
 %{_datadir}/plymouth/themes/capivaraos/
 %{_datadir}/cockpit/branding/capivaraos/
@@ -837,6 +853,16 @@ done
 %{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Thu Sep 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.5.alpha5
+- Logo redonda navy nas telas da distro: a tela de boas-vindas (gnome-initial-setup)
+  e o ícone da distro no dock passam a usar a nova logo REDONDA (capivara branca +
+  "CapivaraOS" num círculo azul-escuro) no lugar da logo marrom. Fonte
+  icons/capivaraos-round-logo.png (circular, cantos transparentes); gera os tamanhos
+  hicolor "capivaraos-round-logo" e o override do fedora-logo-icon (%post +
+  %transfiletriggerin) passa a copiá-la. O capivaraos-full-logo (os-release LOGO= /
+  painel "Sobre") fica intacto. Também alinha o build-all.sh (estava em alpha3
+  enquanto o branding já estava em alpha4).
+
 * Thu Sep 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.4.alpha4
 - Logo próprio do CapivaraOS no fastfetch (FEAT-138/FEAT-50): substitui o logo ASCII
   do Fedora pela capivara + "CapivaraOS" (verde #15B22C). Arte em
@@ -864,7 +890,7 @@ done
   capivaraos-snout-fedora p/ preservar a base GNOME + o fix do BUG-42), branch
   rebase-f45. Repoint do compose: build-all.sh --releasever=45, base do kickstart
   f44 -> f45 (fedora-45/updates-released-f45), trava de updates em 45. os-release/
-  issue -> Fedora 45 + "Snout 2.0.0 (alpha4, preview)". Snout CONTINUA GNOME.
+  issue -> Fedora 45 + "Snout 2.0.0 (alpha5, preview)". Snout CONTINUA GNOME.
   Versionamento pre-release "0.N.alphaN.snout"; "2.0.0-1.snout" reservado p/ o
   lancamento publico conjunto das 3 spins (PROD-61). SMOKE BUILD p/ levantar
   quebras (GNOME/GDM no F45, Anaconda 45) — NAO cortar ISO publica do F45 antes do GA.
