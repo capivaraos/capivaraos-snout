@@ -28,6 +28,7 @@ SRCDIR="${WORKDIR}/${NAME}-${VERSION}"
 mkdir -p "$SRCDIR"
 cp -r "${PROJECT_DIR}/branding/backgrounds" "$SRCDIR/"
 cp -r "${PROJECT_DIR}/branding/icons" "$SRCDIR/"
+cp -r "${PROJECT_DIR}/branding/fastfetch" "$SRCDIR/"
 
 mkdir -p "$HOME/rpmbuild/SOURCES" "$HOME/rpmbuild/SPECS"
 # Remove um tarball homonimo de build anterior antes de gravar o novo.
