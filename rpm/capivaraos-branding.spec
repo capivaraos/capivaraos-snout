@@ -39,7 +39,7 @@ Version:        2.0.0
 # "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
 # 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
 # atualiza "pra tras". Builds de dev saem rotulados "preview".
-Release:        0.7.alpha7%{?dist}.snout
+Release:        0.8.alpha8%{?dist}.snout
 Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0 (preview)
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
@@ -117,10 +117,12 @@ mkdir -p build/pixmaps
 "$CONVERT" icons/capivaraos-logo.png -fill white -colorize 100% \
     -resize 256x256 build/pixmaps/capivaraos-white.png
 
-# ── 4. Avatar padrão (.face): só a capivara, fundo branco quadrado ──────────
-# Vem de icons/capivaraos-logo.png (canvas quadrado, capivara sem texto), não
-# de um -crop sobre a logo-mestre -- ver a nota em 4b sobre coordenadas fixas.
-"$CONVERT" icons/capivaraos-logo.png -background white -flatten \
+# ── 4. Avatar padrão (.face): a logo REDONDA navy (capivara branca + texto num
+# círculo azul-escuro). O GNOME exibe o avatar recortado em círculo, então a
+# logo redonda encaixa direto. Fonte: icons/capivaraos-round-logo.png (já
+# circular, cantos transparentes). Antes era a capivara marrom sobre branco
+# (trocado 2026-09-29 a pedido do dono, junto da revisão de cores).
+"$CONVERT" icons/capivaraos-round-logo.png \
     -resize 256x256 build/pixmaps/capivaraos-face.png
 
 # ── 4b. Logo quadrada (capivara, sem texto, fundo transparente) para o
@@ -454,12 +456,10 @@ picture-options='zoom'
 [org/gnome/desktop/screensaver]
 picture-uri='file://${DEFAULT_WP}'
 
-[org/gnome/desktop/interface]
-# Cor de destaque padrão (verde, cor da marca CapivaraOS). Chave nova do
-# GNOME (47+) para o sistema de "Accent Colors" -- não bloqueamos a chave,
-# o usuário pode trocar livremente em Configurações > Aparência.
-accent-color='green'
 EOF
+# NOTA: NÃO definimos accent-color -- padronizamos na cor de destaque padrão do
+# GNOME (azul). A marca CapivaraOS vem do wallpaper/logo, não de recolorir o
+# accent do sistema (decisão 2026-09-29, alinhado ao que se fez no Marsh).
 
 # ── Terminal fixado no dash (favorite-apps, system-wide via dconf) ───────────
 # No GNOME stock o terminal (Ptyxis, o emulador padrao do Fedora) so aparece
@@ -695,14 +695,14 @@ systemctl enable capivaraos-snapper-setup.service >/dev/null 2>&1 || true
 # escritos aqui (em vez de %files) para evitar conflito de arquivo no dnf.
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha7, preview)"
+VERSION="Snout 2.0.0 (alpha8, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha7, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha8, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-round-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -715,17 +715,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha7, preview)"
+VARIANT="Snout 2.0.0 (alpha8, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha7, preview) \n \l
+CapivaraOS Snout 2.0.0 (alpha8, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha7, preview)
+CapivaraOS Snout 2.0.0 (alpha8, preview)
 EOF
 
 # ── Reaplica os-release apos qualquer atualizacao futura do sistema ────────
@@ -749,14 +749,14 @@ EOF
 grep -q '^NAME="CapivaraOS"' %{_prefix}/lib/os-release 2>/dev/null && exit 0
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha7, preview)"
+VERSION="Snout 2.0.0 (alpha8, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha7, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha8, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-round-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -769,17 +769,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha7, preview)"
+VARIANT="Snout 2.0.0 (alpha8, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha7, preview) \n \l
+CapivaraOS Snout 2.0.0 (alpha8, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha7, preview)
+CapivaraOS Snout 2.0.0 (alpha8, preview)
 EOF
 
 for kver in $(ls /lib/modules 2>/dev/null); do
@@ -853,6 +853,14 @@ done
 %{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Tue Sep 29 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.8.alpha8
+- Padroniza no visual padrão do GNOME (a pedido do dono): (1) remove o
+  accent-color='green' do dconf -- o realce do sistema (foco, botões, polkit)
+  volta ao AZUL padrão do GNOME; a marca vem do wallpaper/logo, não de recolorir
+  o accent. (2) Avatar padrão (.face) deixa de ser a capivara MARROM sobre branco
+  e passa a ser a logo REDONDA navy (capivaraos-round-logo). Instalador (Anaconda)
+  e ANSI_COLOR do terminal seguem como estão (decisão: reverter só o accent).
+
 * Tue Sep 29 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.7.alpha7
 - BLOCKER de boot (PROD-133): remove o /etc/kernel/cmdline "fantasma" no %post do
   capivaraos-post-branding.ks (após o loop do dracut). O arquivo nascia no build da
@@ -904,7 +912,7 @@ done
   capivaraos-snout-fedora p/ preservar a base GNOME + o fix do BUG-42), branch
   rebase-f45. Repoint do compose: build-all.sh --releasever=45, base do kickstart
   f44 -> f45 (fedora-45/updates-released-f45), trava de updates em 45. os-release/
-  issue -> Fedora 45 + "Snout 2.0.0 (alpha7, preview)". Snout CONTINUA GNOME.
+  issue -> Fedora 45 + "Snout 2.0.0 (alpha8, preview)". Snout CONTINUA GNOME.
   Versionamento pre-release "0.N.alphaN.snout"; "2.0.0-1.snout" reservado p/ o
   lancamento publico conjunto das 3 spins (PROD-61). SMOKE BUILD p/ levantar
   quebras (GNOME/GDM no F45, Anaconda 45) — NAO cortar ISO publica do F45 antes do GA.
