@@ -18,7 +18,7 @@ Name:           capivaraos-upgrade
 Version:        1.0.0
 # Sufixo ".snout": convenção das outras spins (evita colisão de NEVRA em
 # ~/rpmbuild compartilhado — BUG-30).
-Release:        1%{?dist}.snout
+Release:        2%{?dist}.snout
 Summary:        Upgrade de versão in-place (dnf5 system-upgrade) do CapivaraOS
 
 License:        GPL-3.0-or-later
@@ -53,6 +53,11 @@ install -D -m 0755 %{SOURCE0} %{buildroot}%{_bindir}/capivaraos-upgrade
 %{_bindir}/capivaraos-upgrade
 
 %changelog
+* Wed Sep 30 2026 CapivaraOS <capivaraos-bot@users.noreply.github.com> - 1.0.0-2.snout
+- Sub-versão de validação da UX de atualização (FEAT-143): sem mudança funcional.
+  Usada para confirmar que os nossos updates aparecem no updater NATIVO do Snout
+  (GNOME Software), ao lado dos do Fedora, via dnf/PackageKit — sem updater próprio.
+
 * Fri Sep 18 2026 CapivaraOS <capivaraos-bot@users.noreply.github.com> - 1.0.0-1.snout
 - Port da engine de upgrade in-place para o Snout 2.x (PROD-116): a ferramenta
   `capivaraos-upgrade` é idêntica à do Marsh (FEAT-111/115) — usa nomes genéricos
