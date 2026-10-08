@@ -105,6 +105,10 @@ vim-enhanced
 # extras opcionais da estacao de dev em um clique (IA local, trilhas, GPU,
 # ferramentas, gh) e o "Atualizar o CapivaraOS" (PROD-116/117).
 capivara-central
+# -- COS Config Center: central de configuracao (codecs, firewall, discos, rede,
+# idioma...). Pacote ja assinado, baixado do nosso repositorio pelo build-all.sh
+# para o repo local capivaraos-local.
+cos-config
 
 # ===== FONTES =====
 liberation-fonts
