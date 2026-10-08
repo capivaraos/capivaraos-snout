@@ -84,6 +84,14 @@ Convenções do kickstart Fedora:
 | `vim-enhanced` | |
 | `@development-tools` | Grupo com gcc, make, etc. |
 
+## ===== APPS PRÓPRIOS DO CAPIVARAOS (série 2.x) =====
+
+| Pacote | Observações |
+|---|---|
+| `capivaraos-branding` | Identidade visual (wallpapers, logo, Plymouth, greeter GDM, os-release). Buildado neste repo (`rpm/capivaraos-branding.spec`). |
+| `capivara-central` | COS Dev Center — app de onboarding de 1º boot (GTK4/libadwaita) que liga os extras opcionais da estação de dev (IA local, trilhas, GPU, ferramentas, gh). Buildado neste repo (`apps/capivara-central/`). |
+| `cos-config` | COS Config Center — central de configuração do sistema (0.11.1). **NÃO é buildado aqui**: vem já ASSINADO do repositório (`repo.capivaraos.org/snout/f45/x86_64/<canal>`, canal via `COS_CONFIG_CHANNEL`, padrão `testing`), baixado e verificado por assinatura (gpgcheck + chave do projeto) no passo 3 do `build-all.sh` antes de entrar na ISO. Mesmo pacote que o usuário recebe por update. Épico PROD-5 / integração PROD-141. |
+
 ## ===== FONTES =====
 
 | Pacote |
