@@ -100,7 +100,7 @@ sudo livemedia-creator --ks="$FLAT_KS" \
 
 # ── Título do menu de boot da mídia live (grub) ─────────────────────────────
 # O lorax gera "CapivaraOS Snout 45" (@PRODUCT@ + @VERSION@=releasever). Queremos
-# que o título ACOMPANHE a versão do CapivaraOS + Fedora: "CapivaraOS Snout 245"
+# que o título ACOMPANHE a versão do CapivaraOS + Fedora: "CapivaraOS Snout 2 45"
 # (2 = série do CapivaraOS, 45 = Fedora base). Derivamos dinamicamente do ISO_NAME
 # (série do CapivaraOS) e do releasever (Fedora), então ao subir qualquer um o
 # título acompanha sozinho. Edita os dois grub.cfg (BIOS /boot/grub2, UEFI
@@ -109,7 +109,7 @@ sudo livemedia-creator --ks="$FLAT_KS" \
 ISO_PATH="${RESULT_DIR}/${ISO_NAME}"
 FVER=45
 COS_MAJOR=$(echo "$ISO_NAME" | sed -E 's/^CapivaraOS-Snout-([0-9]+)\..*/\1/')
-MENU_TITLE="CapivaraOS Snout ${COS_MAJOR}${FVER}"
+MENU_TITLE="CapivaraOS Snout ${COS_MAJOR} ${FVER}"
 echo
 echo "==> Ajustando o título do menu de boot da mídia para: ${MENU_TITLE}"
 if command -v xorriso >/dev/null 2>&1; then
