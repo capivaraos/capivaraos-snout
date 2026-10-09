@@ -863,9 +863,10 @@ done
 %changelog
 * Fri Oct 09 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.11.alpha11
 - Título do menu de boot (GRUB) agora acompanha a versão do CapivaraOS + Fedora:
-  "CapivaraOS Snout 2 45" (2 = série do CapivaraOS, 45 = Fedora), derivado
-  dinamicamente no build-all.sh (ISO_NAME + releasever) e aplicado via xorriso +
-  implantisomd5, como no Marsh. Antes era só "CapivaraOS Snout 45".
+  "CapivaraOS Snout 2 45" (2 = série do CapivaraOS, 45 = Fedora). Feito pelo lorax
+  no COMPOSE via --project="CapivaraOS Snout 2" + @VERSION@ (releasever) no
+  build-all.sh — mesmo approach do Pup. O retítulo pós-build via xorriso NÃO pega
+  no F45 (foi removido). Antes era só "CapivaraOS Snout 45".
 - Wallpaper "Snout do Ano": a logo do CapivaraOS foi movida do canto inferior
   esquerdo para o DIREITO (mesma posição dos demais wallpapers), com sombra leve
   ao redor para não sumir no fundo claro.
