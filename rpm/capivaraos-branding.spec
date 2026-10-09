@@ -39,7 +39,7 @@ Version:        2.0.0
 # "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
 # 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
 # atualiza "pra tras". Builds de dev saem rotulados "preview".
-Release:        0.10.alpha10%{?dist}.snout
+Release:        0.11.alpha11%{?dist}.snout
 Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0 (preview)
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
@@ -177,7 +177,8 @@ done
 set -e
 # Wallpaper padrao do Snout 2.x: "Snout do Ano" (capivaraos-wp-snout-year),
 # EXCLUSIVO do Snout (medalha "Snout of the Year" + logo branca no canto inferior
-# esquerdo, mesma altura/formato dos demais). Os outros wp da marca (Luar, etc.)
+# DIREITO, mesma posicao/altura/formato dos demais, com sombra leve p/ ler no fundo
+# claro). Os outros wp da marca (Luar, etc.)
 # seguem disponiveis no seletor como opcao.
 DEFAULT_WP=%{_datadir}/backgrounds/capivaraos/capivaraos-wp-snout-year.png
 
@@ -702,14 +703,14 @@ systemctl enable capivaraos-snapper-setup.service >/dev/null 2>&1 || true
 # escritos aqui (em vez de %files) para evitar conflito de arquivo no dnf.
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha10, preview)"
+VERSION="Snout 2.0.0 (alpha11, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha10, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha11, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-round-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -722,17 +723,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha10, preview)"
+VARIANT="Snout 2.0.0 (alpha11, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha10, preview) \n \l
+CapivaraOS Snout 2.0.0 (alpha11, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha10, preview)
+CapivaraOS Snout 2.0.0 (alpha11, preview)
 EOF
 
 # ── Reaplica os-release apos qualquer atualizacao futura do sistema ────────
@@ -756,14 +757,14 @@ EOF
 grep -q '^NAME="CapivaraOS"' %{_prefix}/lib/os-release 2>/dev/null && exit 0
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha10, preview)"
+VERSION="Snout 2.0.0 (alpha11, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha10, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha11, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-round-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -776,17 +777,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha10, preview)"
+VARIANT="Snout 2.0.0 (alpha11, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha10, preview) \n \l
+CapivaraOS Snout 2.0.0 (alpha11, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha10, preview)
+CapivaraOS Snout 2.0.0 (alpha11, preview)
 EOF
 
 for kver in $(ls /lib/modules 2>/dev/null); do
@@ -860,6 +861,15 @@ done
 %{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Fri Oct 09 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.11.alpha11
+- Título do menu de boot (GRUB) agora acompanha a versão do CapivaraOS + Fedora:
+  "CapivaraOS Snout 245" (2 = série do CapivaraOS, 45 = Fedora), derivado
+  dinamicamente no build-all.sh (ISO_NAME + releasever) e aplicado via xorriso +
+  implantisomd5, como no Marsh. Antes era só "CapivaraOS Snout 45".
+- Wallpaper "Snout do Ano": a logo do CapivaraOS foi movida do canto inferior
+  esquerdo para o DIREITO (mesma posição dos demais wallpapers), com sombra leve
+  ao redor para não sumir no fundo claro.
+
 * Fri Oct 09 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.10.alpha10
 - Novo wallpaper EXCLUSIVO do Snout: "Snout do Ano" (capivaraos-wp-snout-year.png,
   3840x2160) — medalha "Snout of the Year" + logo branca do CapivaraOS no canto
@@ -935,7 +945,7 @@ done
   capivaraos-snout-fedora p/ preservar a base GNOME + o fix do BUG-42), branch
   rebase-f45. Repoint do compose: build-all.sh --releasever=45, base do kickstart
   f44 -> f45 (fedora-45/updates-released-f45), trava de updates em 45. os-release/
-  issue -> Fedora 45 + "Snout 2.0.0 (alpha10, preview)". Snout CONTINUA GNOME.
+  issue -> Fedora 45 + "Snout 2.0.0 (alpha11, preview)". Snout CONTINUA GNOME.
   Versionamento pre-release "0.N.alphaN.snout"; "2.0.0-1.snout" reservado p/ o
   lancamento publico conjunto das 3 spins (PROD-61). SMOKE BUILD p/ levantar
   quebras (GNOME/GDM no F45, Anaconda 45) — NAO cortar ISO publica do F45 antes do GA.

@@ -16,7 +16,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR=/var/tmp/capivaraos-snout-repo
 RESULT_DIR=/var/tmp/capivaraos-snout-result
-ISO_NAME=CapivaraOS-Snout-2.0.0-alpha10-x86_64.iso
+ISO_NAME=CapivaraOS-Snout-2.0.0-alpha11-x86_64.iso
 
 echo "==> 1/4: Instalando dependências (lorax, rpm-build, ImageMagick, git, createrepo_c)..."
 sudo dnf install -y lorax rpm-build ImageMagick git createrepo_c
@@ -95,8 +95,43 @@ sudo livemedia-creator --ks="$FLAT_KS" \
     --logfile="$LIVEMEDIA_LOG" \
     --project="CapivaraOS Snout" --make-iso --iso-only \
     --iso-name="$ISO_NAME" \
-    --volid="CapivaraOS Snout 2.0.0 alpha10" --variant="CapivaraOS Snout" \
+    --volid="CapivaraOS Snout 2.0.0 alpha11" --variant="CapivaraOS Snout" \
     --releasever=45
+
+# ── Título do menu de boot da mídia live (grub) ─────────────────────────────
+# O lorax gera "CapivaraOS Snout 45" (@PRODUCT@ + @VERSION@=releasever). Queremos
+# que o título ACOMPANHE a versão do CapivaraOS + Fedora: "CapivaraOS Snout 245"
+# (2 = série do CapivaraOS, 45 = Fedora base). Derivamos dinamicamente do ISO_NAME
+# (série do CapivaraOS) e do releasever (Fedora), então ao subir qualquer um o
+# título acompanha sozinho. Edita os dois grub.cfg (BIOS /boot/grub2, UEFI
+# /EFI/BOOT) na ISO com xorriso e reimplanta o checksum (implantisomd5) -- senão
+# "Test this media" falha. Só cosmético (menu do pendrive live); passo NÃO-fatal.
+ISO_PATH="${RESULT_DIR}/${ISO_NAME}"
+FVER=45
+COS_MAJOR=$(echo "$ISO_NAME" | sed -E 's/^CapivaraOS-Snout-([0-9]+)\..*/\1/')
+MENU_TITLE="CapivaraOS Snout ${COS_MAJOR}${FVER}"
+echo
+echo "==> Ajustando o título do menu de boot da mídia para: ${MENU_TITLE}"
+if command -v xorriso >/dev/null 2>&1; then
+    _GW=$(mktemp -d)
+    for GCFG in /EFI/BOOT/grub.cfg /boot/grub2/grub.cfg; do
+        _b="${_GW}/$(echo "$GCFG" | tr '/' '_')"
+        xorriso -osirrox on -indev "$ISO_PATH" -extract "$GCFG" "$_b" 2>/dev/null || continue
+        sed -i "s|CapivaraOS Snout ${FVER}|${MENU_TITLE}|g" "$_b"
+    done
+    if xorriso -indev "$ISO_PATH" -outdev "${ISO_PATH}.new" -boot_image any replay \
+            -update "${_GW}/_EFI_BOOT_grub.cfg"   /EFI/BOOT/grub.cfg \
+            -update "${_GW}/_boot_grub2_grub.cfg" /boot/grub2/grub.cfg \
+            -commit >/dev/null 2>&1 && [ -s "${ISO_PATH}.new" ]; then
+        mv "${ISO_PATH}.new" "$ISO_PATH"
+        command -v implantisomd5 >/dev/null 2>&1 && implantisomd5 --force "$ISO_PATH" >/dev/null 2>&1
+        echo "==> Título do menu de boot ajustado."
+    else
+        rm -f "${ISO_PATH}.new"
+        echo "AVISO: não consegui reescrever o grub.cfg da ISO; o menu fica 'Snout ${FVER}' (só cosmético)." >&2
+    fi
+    rm -rf "$_GW"
+fi
 
 # ── Trava contra ISO sem os updates do Fedora (BUG-29) ─────────────────────
 # As ISOs 1.1.2/1.1.3 da spin Marsh saíram só com o Fedora 44 GA porque o repo
