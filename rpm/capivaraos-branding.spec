@@ -39,7 +39,7 @@ Version:        2.0.0
 # "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
 # 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
 # atualiza "pra tras". Builds de dev saem rotulados "preview".
-Release:        0.11.alpha11%{?dist}.snout
+Release:        0.12.alpha12%{?dist}.snout
 Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0 (preview)
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
@@ -588,8 +588,9 @@ EOF
 # ── Logo próprio do fastfetch (FEAT-138 [Snout] / FEAT-50) ────────────────────
 # O fastfetch mostra o logo ASCII do Fedora (escolhido por ID_LIKE do os-release).
 # Trocamos pela cabeça de capivara da marca + "CapivaraOS" em verde. A arte vai
-# em /usr/share/capivaraos/fastfetch/ e o config.jsonc (só o LOGO, sem mexer nos
-# módulos) em /etc/skel E /etc/xdg -- este ultimo p/ valer na sessao LIVE
+# em /usr/share/capivaraos/fastfetch/ e o config.jsonc (logo + a lista de módulos
+# padrão -- um config só-logo imprimiria APENAS a capivara, sem as infos) em
+# /etc/skel E /etc/xdg -- este ultimo p/ valer na sessao LIVE
 # (fastfetch le XDG_CONFIG_DIRS=/etc/xdg). Sem auto-run (terminal limpo, decisão
 # do dono): o logo só aparece ao rodar `fastfetch`. Portado do Marsh (FEAT-136).
 install -d %{buildroot}%{_datadir}/capivaraos/fastfetch
@@ -861,6 +862,13 @@ done
 %{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Tue Oct 13 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.12.alpha12
+- Fastfetch: corrige o config.jsonc que mostrava SÓ o logo (a cabeça de capivara)
+  sem nenhuma info do sistema. Ao passar um config próprio, o fastfetch não aplica
+  a lista de módulos padrão sozinho — um config só-"logo" imprime apenas o logo.
+  Adicionada a lista "modules" padrão ao config.jsonc; o logo/cor fica intocado.
+  Provado no fastfetch 2.69. (reference_fastfetch_logo / aviso vindo do Herd.)
+
 * Fri Oct 09 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.11.alpha11
 - Título do menu de boot (GRUB) agora acompanha a versão do CapivaraOS + Fedora:
   "CapivaraOS Snout 2 45" (2 = série do CapivaraOS, 45 = Fedora). Feito pelo lorax
