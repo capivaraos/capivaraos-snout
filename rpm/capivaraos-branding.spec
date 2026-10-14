@@ -40,6 +40,11 @@ Version:        2.0.0
 # 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
 # atualiza "pra tras". Builds de dev saem rotulados "preview".
 Release:        0.12.alpha12%{?dist}.snout
+# Rotulo da pre-release usado no /etc/os-release, /etc/issue e /etc/issue.net
+# ("alphaN"). Fica num macro unico para NAO esquecer de subir junto com o
+# Release (o fastfetch/Sobre leem o os-release; se divergir do nome da ISO, o
+# sistema se reporta com a alpha errada). Ao subir o Release, suba isto tambem.
+%global cos_label alpha12
 Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0 (preview)
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
@@ -704,14 +709,14 @@ systemctl enable capivaraos-snapper-setup.service >/dev/null 2>&1 || true
 # escritos aqui (em vez de %files) para evitar conflito de arquivo no dnf.
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha11, preview)"
+VERSION="Snout 2.0.0 (%{cos_label}, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha11, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (%{cos_label}, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-round-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -724,17 +729,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha11, preview)"
+VARIANT="Snout 2.0.0 (%{cos_label}, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha11, preview) \n \l
+CapivaraOS Snout 2.0.0 (%{cos_label}, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha11, preview)
+CapivaraOS Snout 2.0.0 (%{cos_label}, preview)
 EOF
 
 # ── Reaplica os-release apos qualquer atualizacao futura do sistema ────────
@@ -758,14 +763,14 @@ EOF
 grep -q '^NAME="CapivaraOS"' %{_prefix}/lib/os-release 2>/dev/null && exit 0
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (alpha11, preview)"
+VERSION="Snout 2.0.0 (%{cos_label}, preview)"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (alpha11, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0 (%{cos_label}, preview)"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-round-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -778,17 +783,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (alpha11, preview)"
+VARIANT="Snout 2.0.0 (%{cos_label}, preview)"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha11, preview) \n \l
+CapivaraOS Snout 2.0.0 (%{cos_label}, preview) \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (alpha11, preview)
+CapivaraOS Snout 2.0.0 (%{cos_label}, preview)
 EOF
 
 for kver in $(ls /lib/modules 2>/dev/null); do
@@ -868,6 +873,10 @@ done
   a lista de módulos padrão sozinho — um config só-"logo" imprime apenas o logo.
   Adicionada a lista "modules" padrão ao config.jsonc; o logo/cor fica intocado.
   Provado no fastfetch 2.69. (reference_fastfetch_logo / aviso vindo do Herd.)
+- os-release/issue: o rótulo da pré-release (VERSION/PRETTY_NAME/VARIANT/issue)
+  estava preso em "alpha11" enquanto a ISO já era alpha12 — o fastfetch/Sobre
+  reportavam a alpha errada. Corrigido para alpha12 e parametrizado num macro
+  único (%%global cos_label) para não divergir do Release em bumps futuros.
 
 * Fri Oct 09 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.11.alpha11
 - Título do menu de boot (GRUB) agora acompanha a versão do CapivaraOS + Fedora:
@@ -954,7 +963,7 @@ done
   capivaraos-snout-fedora p/ preservar a base GNOME + o fix do BUG-42), branch
   rebase-f45. Repoint do compose: build-all.sh --releasever=45, base do kickstart
   f44 -> f45 (fedora-45/updates-released-f45), trava de updates em 45. os-release/
-  issue -> Fedora 45 + "Snout 2.0.0 (alpha11, preview)". Snout CONTINUA GNOME.
+  issue -> Fedora 45 + "Snout 2.0.0 (%{cos_label}, preview)". Snout CONTINUA GNOME.
   Versionamento pre-release "0.N.alphaN.snout"; "2.0.0-1.snout" reservado p/ o
   lancamento publico conjunto das 3 spins (PROD-61). SMOKE BUILD p/ levantar
   quebras (GNOME/GDM no F45, Anaconda 45) — NAO cortar ISO publica do F45 antes do GA.
