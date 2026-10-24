@@ -39,12 +39,12 @@ Version:        2.0.0
 # "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
 # 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
 # atualiza "pra tras". Builds de dev saem rotulados "preview".
-Release:        0.12.alpha12%{?dist}.snout
+Release:        0.13.alpha13%{?dist}.snout
 # Rotulo da pre-release usado no /etc/os-release, /etc/issue e /etc/issue.net
 # ("alphaN"). Fica num macro unico para NAO esquecer de subir junto com o
 # Release (o fastfetch/Sobre leem o os-release; se divergir do nome da ISO, o
 # sistema se reporta com a alpha errada). Ao subir o Release, suba isto tambem.
-%global cos_label alpha12
+%global cos_label alpha13
 Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0 (preview)
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
@@ -423,6 +423,16 @@ cat > %{buildroot}%{_datadir}/cockpit/branding/capivaraos/branding.css << 'EOF'
 .pf-v6-theme-dark .anaconda {
     --pf-t--global--color--brand--default: var(--brand-default-light);
     --pf-t--global--color--brand--hover: var(--brand-default);
+}
+
+/* Esconde o bloco de feedback/QR da tela final do instalador. O anaconda-webui
+ * (src/components/installation/Feedback.jsx) renderiza um QR + link FIXO para
+ * https://discussion.fedoraproject.org/tag/anaconda -- nao ha configuracao para
+ * trocar a URL sem patchar o pacote. Como somos um remix, mandamos o usuario
+ * para a NOSSA pesquisa numa superficie propria (boas-vindas / COS Dev Center),
+ * nao para o Ask Fedora. O container do componente e .feedback-section. */
+.feedback-section {
+    display: none !important;
 }
 EOF
 
@@ -867,6 +877,14 @@ done
 %{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Sat Oct 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.13.alpha13
+- Instalador (Anaconda WebUI): esconde o bloco de feedback/QR da tela final que
+  apontava, com URL fixa no pacote anaconda-webui, para o Ask Fedora
+  (discussion.fedoraproject.org/tag/anaconda). Regra CSS no branding do Cockpit
+  (.feedback-section { display:none }). A pesquisa própria do CapivaraOS será
+  oferecida numa superfície nossa (boas-vindas / COS Dev Center), não no
+  instalador. Sem problema de marca: somos um remix e a URL do Fedora é fixa.
+
 * Tue Oct 13 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.12.alpha12
 - Fastfetch: corrige o config.jsonc que mostrava SÓ o logo (a cabeça de capivara)
   sem nenhuma info do sistema. Ao passar um config próprio, o fastfetch não aplica
