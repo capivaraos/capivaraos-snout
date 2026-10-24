@@ -39,12 +39,12 @@ Version:        2.0.0
 # "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
 # 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
 # atualiza "pra tras". Builds de dev saem rotulados "preview".
-Release:        0.13.alpha13%{?dist}.snout
+Release:        0.14.alpha14%{?dist}.snout
 # Rotulo da pre-release usado no /etc/os-release, /etc/issue e /etc/issue.net
 # ("alphaN"). Fica num macro unico para NAO esquecer de subir junto com o
 # Release (o fastfetch/Sobre leem o os-release; se divergir do nome da ISO, o
 # sistema se reporta com a alpha errada). Ao subir o Release, suba isto tambem.
-%global cos_label alpha13
+%global cos_label alpha14
 Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0 (preview)
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
@@ -372,6 +372,37 @@ fun refresh_callback() {
     spinner.sprite.SetY(spinner.cy - img.GetHeight() / 2);
 }
 Plymouth.SetRefreshFunction(refresh_callback);
+
+# ── Campo de senha do disco criptografado (LUKS) ────────────────────────────
+# Sem SetDisplayPasswordFunction, com LUKS o Plymouth nao desenha campo nenhum e
+# o boot PARECE travado (o prompt so aparece em texto, via ESC). Escondemos a
+# mensagem normal e mostramos um texto + bolinhas da senha abaixo do spinner.
+# Nomes adaptados ao script do Snout (message.sprite / spinner.cy).
+fun display_password_callback(prompt_string, bullets) {
+    message.sprite.SetOpacity(0);
+    pw_prompt.image = Image.Text("Digite a senha para desbloquear o disco", 1, 1, 1, 1, "Sans 12");
+    if (pw_prompt.sprite) pw_prompt.sprite.SetImage(pw_prompt.image);
+    else pw_prompt.sprite = Sprite(pw_prompt.image);
+    pw_prompt.sprite.SetPosition(Window.GetWidth() / 2 - pw_prompt.image.GetWidth() / 2, spinner.cy + 70, 1);
+    pw_prompt.sprite.SetOpacity(1);
+
+    bullet_text = "";
+    for (i = 0; i < bullets; i++) bullet_text += "*";
+    if (bullet_text == "") bullet_text = " ";
+    pw_entry.image = Image.Text(bullet_text, 1, 1, 1, 1, "Sans 18");
+    if (pw_entry.sprite) pw_entry.sprite.SetImage(pw_entry.image);
+    else pw_entry.sprite = Sprite(pw_entry.image);
+    pw_entry.sprite.SetPosition(Window.GetWidth() / 2 - pw_entry.image.GetWidth() / 2, spinner.cy + 100, 1);
+    pw_entry.sprite.SetOpacity(1);
+}
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+
+fun display_normal_callback() {
+    message.sprite.SetOpacity(1);
+    if (pw_prompt.sprite) pw_prompt.sprite.SetOpacity(0);
+    if (pw_entry.sprite) pw_entry.sprite.SetOpacity(0);
+}
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
 EOF
 
 # NOTA CapivaraOS: /etc/os-release/issue/issue.net NAO sao gerados aqui (em
@@ -877,6 +908,14 @@ done
 %{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Sat Oct 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.14.alpha14
+- Plymouth (capivaraos.script): adiciona o campo de senha do disco criptografado
+  (LUKS). Sem SetDisplayPasswordFunction, com disco cifrado o splash não desenhava
+  campo nenhum e o boot PARECIA travado (o prompt só aparecia em texto, via ESC).
+  Agora SetDisplayPasswordFunction/SetDisplayNormalFunction escondem a mensagem
+  normal e mostram "Digite a senha para desbloquear o disco" + bolinhas abaixo do
+  spinner. Bug cross-spin (achado no Pup, PR #7). Nomes adaptados ao script do Snout.
+
 * Sat Oct 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.13.alpha13
 - Instalador (Anaconda WebUI): esconde o bloco de feedback/QR da tela final que
   apontava, com URL fixa no pacote anaconda-webui, para o Ask Fedora
