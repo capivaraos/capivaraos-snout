@@ -39,12 +39,12 @@ Version:        2.0.0
 # "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
 # 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
 # atualiza "pra tras". Builds de dev saem rotulados "preview".
-Release:        0.14.alpha14%{?dist}.snout
+Release:        0.15.alpha15%{?dist}.snout
 # Rotulo da pre-release usado no /etc/os-release, /etc/issue e /etc/issue.net
 # ("alphaN"). Fica num macro unico para NAO esquecer de subir junto com o
 # Release (o fastfetch/Sobre leem o os-release; se divergir do nome da ISO, o
 # sistema se reporta com a alpha errada). Ao subir o Release, suba isto tambem.
-%global cos_label alpha14
+%global cos_label alpha15
 Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0 (preview)
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
@@ -178,6 +178,28 @@ for i in $(seq 0 29); do
         -distort SRT ${ANG} +repage "build/plymouth/spinner/${i}.png"
 done
 
+# Prompt de senha do disco criptografado (LUKS), PRE-RENDERIZADO em PNG.
+# Por que PNG e nao texto no script: o pedido de senha roda no INITRAMFS, que
+# NAO embarca libpango/libcairo -- logo o Image.Text() do Plymouth nao desenha
+# texto nenhum ali (so imagens, como a logo e o spinner, aparecem). Com
+# Image.Text o prompt ficava invisivel e o boot PARECIA travado. Entao o texto
+# vem pronto em imagem. (BUG-45)
+# Fonte: resolve uma sans instalada; evita a variavel (caminho com [wght], que
+# atrapalha o ImageMagick) e cai p/ a Liberation (sempre presente); por fim,
+# sem -font, usa a default do proprio ImageMagick.
+PWFONT=$(fc-match -f '%%{file}' sans-serif 2>/dev/null || true)
+case "$PWFONT" in *'['*|'') PWFONT= ;; esac
+[ -n "$PWFONT" ] && [ -f "$PWFONT" ] || PWFONT=/usr/share/fonts/liberation-sans-fonts/LiberationSans-Regular.ttf
+[ -f "$PWFONT" ] || PWFONT=
+PWFONTOPT=""
+[ -n "$PWFONT" ] && PWFONTOPT="-font $PWFONT"
+"$CONVERT" -background none -fill white $PWFONTOPT -pointsize 26 \
+    label:"Digite a senha para desbloquear o disco" \
+    build/plymouth/password_prompt.png
+# Bolinha branca: o script desenha uma por caractere digitado da senha.
+"$CONVERT" -size 18x18 xc:none -fill white -draw "circle 9,9 9,2" \
+    build/plymouth/bullet.png
+
 %install
 set -e
 # Wallpaper padrao do Snout 2.x: "Snout do Ano" (capivaraos-wp-snout-year),
@@ -292,6 +314,12 @@ install -d %{buildroot}%{_datadir}/plymouth/themes/capivaraos/spinner
 install -m 0644 build/plymouth/spinner/*.png \
     %{buildroot}%{_datadir}/plymouth/themes/capivaraos/spinner/
 
+# Prompt de senha (LUKS) pre-renderizado -- ver justificativa no %build.
+install -m 0644 build/plymouth/password_prompt.png \
+    %{buildroot}%{_datadir}/plymouth/themes/capivaraos/password_prompt.png
+install -m 0644 build/plymouth/bullet.png \
+    %{buildroot}%{_datadir}/plymouth/themes/capivaraos/bullet.png
+
 cat > %{buildroot}%{_datadir}/plymouth/themes/capivaraos/capivaraos.plymouth << 'EOF'
 [Plymouth Theme]
 Name=CapivaraOS
@@ -376,31 +404,47 @@ Plymouth.SetRefreshFunction(refresh_callback);
 # ── Campo de senha do disco criptografado (LUKS) ────────────────────────────
 # Sem SetDisplayPasswordFunction, com LUKS o Plymouth nao desenha campo nenhum e
 # o boot PARECE travado (o prompt so aparece em texto, via ESC). Escondemos a
-# mensagem normal e mostramos um texto + bolinhas da senha abaixo do spinner.
-# Nomes adaptados ao script do Snout (message.sprite / spinner.cy).
+# mensagem normal e mostramos o texto do prompt + uma bolinha por caractere.
+# IMPORTANTE: este callback roda no INITRAMFS, que NAO tem libpango/libcairo ->
+# Image.Text() NAO renderiza texto ali (fica invisivel). Por isso usamos os
+# PNGs pre-renderizados no %build (password_prompt.png, bullet.png), desenhados
+# como imagem -- exatamente como a logo e o spinner, que aparecem normalmente.
+pw_prompt.image = Image("password_prompt.png");
+pw_bullet.image = Image("bullet.png");
+pw_bullet_gap = 6;    # espaco horizontal entre bolinhas
+pw_bullet_max = 64;   # teto de bolinhas desenhadas
+
 fun display_password_callback(prompt_string, bullets) {
     message.sprite.SetOpacity(0);
-    pw_prompt.image = Image.Text("Digite a senha para desbloquear o disco", 1, 1, 1, 1, "Sans 12");
-    if (pw_prompt.sprite) pw_prompt.sprite.SetImage(pw_prompt.image);
-    else pw_prompt.sprite = Sprite(pw_prompt.image);
-    pw_prompt.sprite.SetPosition(Window.GetWidth() / 2 - pw_prompt.image.GetWidth() / 2, spinner.cy + 70, 1);
+
+    # Texto "Digite a senha para desbloquear o disco"
+    if (!pw_prompt.sprite) pw_prompt.sprite = Sprite(pw_prompt.image);
+    pw_prompt.sprite.SetPosition(Window.GetWidth() / 2 - pw_prompt.image.GetWidth() / 2,
+                                 spinner.cy + 70, 10);
     pw_prompt.sprite.SetOpacity(1);
 
-    bullet_text = "";
-    for (i = 0; i < bullets; i++) bullet_text += "*";
-    if (bullet_text == "") bullet_text = " ";
-    pw_entry.image = Image.Text(bullet_text, 1, 1, 1, 1, "Sans 18");
-    if (pw_entry.sprite) pw_entry.sprite.SetImage(pw_entry.image);
-    else pw_entry.sprite = Sprite(pw_entry.image);
-    pw_entry.sprite.SetPosition(Window.GetWidth() / 2 - pw_entry.image.GetWidth() / 2, spinner.cy + 100, 1);
-    pw_entry.sprite.SetOpacity(1);
+    # Uma bolinha por caractere digitado, centralizadas em linha
+    bw = pw_bullet.image.GetWidth();
+    total = bullets * bw + (bullets - 1) * pw_bullet_gap;
+    if (bullets < 1) total = 0;
+    start_x = Window.GetWidth() / 2 - total / 2;
+    by = spinner.cy + 104;
+    for (i = 0; i < bullets && i < pw_bullet_max; i++) {
+        if (!pw_bullet[i].sprite) pw_bullet[i].sprite = Sprite(pw_bullet.image);
+        pw_bullet[i].sprite.SetPosition(start_x + i * (bw + pw_bullet_gap), by, 10);
+        pw_bullet[i].sprite.SetOpacity(1);
+    }
+    # esconde as bolinhas que sobraram (quando o usuario apaga caracteres)
+    for (i = bullets; i < pw_bullet_max; i++)
+        if (pw_bullet[i].sprite) pw_bullet[i].sprite.SetOpacity(0);
 }
 Plymouth.SetDisplayPasswordFunction(display_password_callback);
 
 fun display_normal_callback() {
     message.sprite.SetOpacity(1);
     if (pw_prompt.sprite) pw_prompt.sprite.SetOpacity(0);
-    if (pw_entry.sprite) pw_entry.sprite.SetOpacity(0);
+    for (i = 0; i < pw_bullet_max; i++)
+        if (pw_bullet[i].sprite) pw_bullet[i].sprite.SetOpacity(0);
 }
 Plymouth.SetDisplayNormalFunction(display_normal_callback);
 EOF
@@ -908,6 +952,15 @@ done
 %{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Sun Oct 25 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.15.alpha15
+- Plymouth (capivaraos.script): corrige o prompt de senha do disco criptografado
+  (LUKS), que no alpha14 ainda nao aparecia. Causa comprovada: o pedido de senha
+  roda no INITRAMFS, que nao embarca libpango/libcairo, entao o Image.Text() do
+  Plymouth nao renderiza texto ali -- o prompt ficava invisivel (so a logo/spinner,
+  que sao PNG, apareciam) e o boot parecia travado. Agora o texto "Digite a senha
+  para desbloquear o disco" e as bolinhas (uma por caractere) sao PNGs
+  pre-renderizados no %build e desenhados como imagem, que funcionam no initramfs.
+
 * Sat Oct 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.14.alpha14
 - Plymouth (capivaraos.script): adiciona o campo de senha do disco criptografado
   (LUKS). Sem SetDisplayPasswordFunction, com disco cifrado o splash não desenhava
