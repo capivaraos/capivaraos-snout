@@ -39,13 +39,15 @@ Version:        2.0.0
 # "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
 # 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
 # atualiza "pra tras". Builds de dev saem rotulados "preview".
-Release:        0.16.alpha16%{?dist}.snout
-# Rotulo da pre-release usado no /etc/os-release, /etc/issue e /etc/issue.net
-# ("alphaN"). Fica num macro unico para NAO esquecer de subir junto com o
-# Release (o fastfetch/Sobre leem o os-release; se divergir do nome da ISO, o
-# sistema se reporta com a alpha errada). Ao subir o Release, suba isto tambem.
-%global cos_label alpha16
-Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0 (preview)
+Release:        1%{?dist}.snout
+# Rotulo de pre-release (alphaN) no os-release/issue/issue.net/VARIANT. As
+# strings abaixo usam a condicional %%{?cos_label}: se o macro cos_label estiver
+# DEFINIDO, viram "Snout 2.0.0 (<valor>, preview)"; se NAO estiver (caso ATUAL,
+# RELEASE ESTAVEL do 2.0), viram "Snout 2.0.0" limpo. O fastfetch/Sobre leem o
+# os-release, entao o rotulo tem que casar com o nome da ISO. Para um build de
+# preview, defina o macro numa linha logo abaixo do Release (FORA de comentario:
+# o rpm processa a diretiva ATE em linha comentada), por ex.: %%global cos_label alphaN
+Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0%{?cos_label: (preview)}
 
 License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
 URL:            https://capivaraos.org
@@ -69,7 +71,7 @@ Requires:       dconf
 # dconf/posttrans, sem remover o pacote.
 
 %description
-Pacote de identidade visual do CapivaraOS Snout 2.0.0 (preview): wallpapers da
+Pacote de identidade visual do CapivaraOS Snout 2.0.0%{?cos_label: (preview)}: wallpapers da
 marca da série 2.x (os mesmos do Marsh 2.0), conjunto de ícones
 "capivaraos-logo" e "capivaraos-full-logo", tema Plymouth de boot, tela de
 login GDM, /etc/os-release, /etc/issue e wallpaper padrão do GNOME (via
@@ -626,6 +628,27 @@ picture-options='zoom'
 logo='/usr/share/pixmaps/capivaraos-whitelogo-med.png'
 EOF
 
+# ── Hostname da marca: nao deixar o NetworkManager sobrescrever "capivaraos" ───
+# DEFAULT_HOSTNAME=capivaraos (no os-release) vira o hostname transient quando o
+# /etc/hostname (static) esta vazio. Porem o NetworkManager, no hostname-mode
+# padrao, faz um reverse-DNS do IP do lease DHCP e sobrescreve o transient. Em VM
+# (libvirt/Boxes) e em roteadores que registram o hostname do DHCP no DNS local,
+# esse lookup devolve "localhost-live" (nome que a midia live mandou no DHCP,
+# reusando a mesma MAC no install) -> o sistema instalado nasce "localhost-live"
+# em vez de "capivaraos". E bug do NetworkManager (nao do desktop), entao vale
+# igual no GNOME. Fix: hostname-mode=none -> o NM nao mexe no hostname; o
+# DEFAULT_HOSTNAME prevalece e um hostname escolhido pelo usuario (hostnamectl /
+# static) continua respeitado. Arquivo estatico (empacotado em %files). O
+# diretorio conf.d pertence ao pacote NetworkManager (sempre presente no GNOME),
+# por isso so empacotamos o arquivo, nao o %dir.
+install -d %{buildroot}%{_sysconfdir}/NetworkManager/conf.d
+cat > %{buildroot}%{_sysconfdir}/NetworkManager/conf.d/00-capivaraos-hostname.conf << 'EOF'
+# CapivaraOS: nao deixar o NetworkManager sobrescrever o hostname da marca
+# (capivaraos, de DEFAULT_HOSTNAME no os-release) com o nome do lease DHCP.
+[main]
+hostname-mode=none
+EOF
+
 # ── Perfil do Anaconda: faz o instalador reconhecer o CapivaraOS (BUG-38+BUG-42) ─
 # O Anaconda casa o perfil de instalacao pelo os_id do /etc/os-release. Como o
 # nosso ID e "capivaraos" (nao "fedora"), NENHUM perfil casava e o instalador
@@ -821,14 +844,14 @@ systemctl enable capivaraos-snapper-setup.service >/dev/null 2>&1 || true
 # escritos aqui (em vez de %files) para evitar conflito de arquivo no dnf.
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (%{cos_label}, preview)"
+VERSION="Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (%{cos_label}, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-round-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -841,17 +864,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (%{cos_label}, preview)"
+VARIANT="Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (%{cos_label}, preview) \n \l
+CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)} \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (%{cos_label}, preview)
+CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}
 EOF
 
 # ── Reaplica os-release apos qualquer atualizacao futura do sistema ────────
@@ -875,14 +898,14 @@ EOF
 grep -q '^NAME="CapivaraOS"' %{_prefix}/lib/os-release 2>/dev/null && exit 0
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 2.0.0 (%{cos_label}, preview)"
+VERSION="Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
 VERSION_ID=45
 VERSION_CODENAME=snout
 PLATFORM_ID="platform:f45"
-PRETTY_NAME="CapivaraOS Snout 2.0.0 (%{cos_label}, preview)"
+PRETTY_NAME="CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 ANSI_COLOR="0;32"
 LOGO=capivaraos-round-logo
 CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
@@ -895,17 +918,17 @@ REDHAT_BUGZILLA_PRODUCT="Fedora"
 REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=45
-VARIANT="Snout 2.0.0 (%{cos_label}, preview)"
+VARIANT="Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 2.0.0 (%{cos_label}, preview) \n \l
+CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)} \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 2.0.0 (%{cos_label}, preview)
+CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}
 EOF
 
 for kver in $(ls /lib/modules 2>/dev/null); do
@@ -971,6 +994,7 @@ done
 %config(noreplace) %{_sysconfdir}/dconf/profile/gdm
 %config(noreplace) %{_sysconfdir}/dconf/db/gdm.d/01-capivaraos-background
 %{_sysconfdir}/anaconda/profile.d/capivaraos.conf
+%{_sysconfdir}/NetworkManager/conf.d/00-capivaraos-hostname.conf
 %dir %{_datadir}/capivaraos
 %{_datadir}/capivaraos/fastfetch/
 %{_sysconfdir}/skel/.config/fastfetch/
@@ -979,6 +1003,19 @@ done
 %{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Wed Nov 04 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-1
+- Corte de RELEASE ESTAVEL do 2.0 (PROD-181): os-release/issue/issue.net/VARIANT
+  e Summary/description agora "CapivaraOS Snout 2.0.0" limpo -- o rotulo de
+  preview virou condicional %%{?cos_label} e o macro cos_label foi desativado
+  (sem alphaN). Release 0.16.alpha16 -> 1. (reference osrelease_alpha_label.)
+- Hostname da marca: drop-in /etc/NetworkManager/conf.d/00-capivaraos-hostname.conf
+  com hostname-mode=none. O sistema instalado nascia "localhost-live" porque o
+  NetworkManager sobrescrevia o DEFAULT_HOSTNAME=capivaraos com o reverse-DNS do
+  lease DHCP; com hostname-mode=none o NM nao mexe no hostname. E bug do NM, nao
+  do desktop -- mesmo fix do Marsh, vale igual no GNOME.
+- capivaraos-repos + capivaraos-upgrade embarcados na ISO (kickstart + build),
+  habilitando o update in-place assinado e o upgrade de versao sem reformatar.
+
 * Sun Oct 25 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.16.alpha16
 - Plymouth (capivaraos.script): polimento do prompt de senha LUKS (validado em VM
   no alpha15). Durante a digitação o spinner é ESCONDIDO (nada está carregando) e
