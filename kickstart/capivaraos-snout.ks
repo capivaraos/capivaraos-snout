@@ -110,6 +110,15 @@ capivara-central
 # para o repo local capivaraos-local.
 cos-config
 
+# ===== UPDATE IN-PLACE (repo assinado + upgrade de versao) =====
+# capivaraos-repos: instala o repositorio de updates assinado (repo.capivaraos.org)
+# + a chave GPG do projeto, habilitando o "atualize sem formatar" via dnf/GNOME
+# Software. capivaraos-upgrade: ferramenta de upgrade de versao (2.x -> ...) com
+# snapshot pre-upgrade. Ambos buildados localmente pelo build-all.sh; o
+# capivaraos-upgrade depende de capivaraos-repos. (FEAT-111, PROD-116/117.)
+capivaraos-repos
+capivaraos-upgrade
+
 # ===== FONTES =====
 liberation-fonts
 dejavu-fonts-all
