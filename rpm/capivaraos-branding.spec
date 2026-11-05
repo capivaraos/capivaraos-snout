@@ -24,7 +24,7 @@
 #     explícita do CapivaraOS Snout, diferente da spin Marsh).
 
 Name:           capivaraos-branding
-Version:        1.1.15
+Version:        2.0.0
 # O sufixo ".snout" no Release NAO e cosmetico -- e o que impede colisao de
 # NEVRA entre as spins. As tres (Marsh, Pup, Snout) constroem um pacote com
 # este MESMO Name e usam o mesmo ~/rpmbuild, entao duas spins na mesma
@@ -33,10 +33,23 @@ Version:        1.1.15
 # ambos em 1.0.0), e em 21/07 um build do Pup consumiu sources da Marsh
 # (BUG-30). Com o sufixo, a colisao passa a ser impossivel por construcao,
 # em vez de depender de escolher versoes livres na mao.
+#
+# Serie 2.x (Fedora 45): pre-releases no padrao Fedora
+# "0.N.alphaN.<dist>.snout" (0.1.alpha1, 0.2.alpha2, ...). O
+# "2.0.0-1.<dist>.snout" fica RESERVADO para o LANCAMENTO PUBLICO conjunto das
+# 3 spins (ver PROD-61). NEVRA 2.0.0-0.1.alpha1 < 2.0.0-1, entao o dnf nunca
+# atualiza "pra tras". Builds de dev saem rotulados "preview".
 Release:        1%{?dist}.snout
-Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 1.1.15
+# Rotulo de pre-release (alphaN) no os-release/issue/issue.net/VARIANT. As
+# strings abaixo usam a condicional %%{?cos_label}: se o macro cos_label estiver
+# DEFINIDO, viram "Snout 2.0.0 (<valor>, preview)"; se NAO estiver (caso ATUAL,
+# RELEASE ESTAVEL do 2.0), viram "Snout 2.0.0" limpo. O fastfetch/Sobre leem o
+# os-release, entao o rotulo tem que casar com o nome da ISO. Para um build de
+# preview, defina o macro numa linha logo abaixo do Release (FORA de comentario:
+# o rpm processa a diretiva ATE em linha comentada), por ex.: %%global cos_label alphaN
+Summary:        Identidade visual, wallpapers e branding padrão do CapivaraOS Snout 2.0.0%{?cos_label: (preview)}
 
-License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark AND CC-BY-SA-3.0 AND CC-BY-SA-4.0
+License:        GPL-3.0-or-later AND LicenseRef-CapivaraOS-Trademark
 URL:            https://capivaraos.org
 BuildArch:      noarch
 
@@ -58,8 +71,8 @@ Requires:       dconf
 # dconf/posttrans, sem remover o pacote.
 
 %description
-Pacote de identidade visual do CapivaraOS Snout 1.1.15: wallpapers (incluindo as
-fotos de capivaras do Wikimedia Commons, CC BY-SA), conjunto de ícones
+Pacote de identidade visual do CapivaraOS Snout 2.0.0%{?cos_label: (preview)}: wallpapers da
+marca da série 2.x (os mesmos do Marsh 2.0), conjunto de ícones
 "capivaraos-logo" e "capivaraos-full-logo", tema Plymouth de boot, tela de
 login GDM, /etc/os-release, /etc/issue e wallpaper padrão do GNOME (via
 dconf), com o GNOME Shell padrão (sem customizações de layout).
@@ -93,15 +106,30 @@ for SIZE in 16 22 24 32 36 48 64 96 128 256 512; do
         "build/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-full-logo.png"
 done
 
+# ── 2b. Ícone REDONDO navy "capivaraos-round-logo" (capivara branca + texto
+# num círculo azul-escuro) ──────────────────────────────────────────────────
+# É o que sobrescreve o "fedora-logo-icon" (logo da distro): aparece na tela de
+# boas-vindas do gnome-initial-setup e como ícone da distro no dock. Fonte:
+# icons/capivaraos-round-logo.png (já circular, cantos transparentes) -- só
+# redimensiona.
+for SIZE in 16 22 24 32 36 48 64 96 128 256 512; do
+    mkdir -p "build/icons/hicolor/${SIZE}x${SIZE}/apps"
+    "$CONVERT" icons/capivaraos-round-logo.png -background none \
+        -resize "${SIZE}x${SIZE}" \
+        "build/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-round-logo.png"
+done
+
 # ── 3. Ícone branco para a área de trabalho ("Instalar CapivaraOS" etc) ─────
 mkdir -p build/pixmaps
 "$CONVERT" icons/capivaraos-logo.png -fill white -colorize 100% \
     -resize 256x256 build/pixmaps/capivaraos-white.png
 
-# ── 4. Avatar padrão (.face): só a capivara, fundo branco quadrado ──────────
-# Vem de icons/capivaraos-logo.png (canvas quadrado, capivara sem texto), não
-# de um -crop sobre a logo-mestre -- ver a nota em 4b sobre coordenadas fixas.
-"$CONVERT" icons/capivaraos-logo.png -background white -flatten \
+# ── 4. Avatar padrão (.face): a logo REDONDA navy (capivara branca + texto num
+# círculo azul-escuro). O GNOME exibe o avatar recortado em círculo, então a
+# logo redonda encaixa direto. Fonte: icons/capivaraos-round-logo.png (já
+# circular, cantos transparentes). Antes era a capivara marrom sobre branco
+# (trocado 2026-09-29 a pedido da comunidade, junto da revisão de cores).
+"$CONVERT" icons/capivaraos-round-logo.png \
     -resize 256x256 build/pixmaps/capivaraos-face.png
 
 # ── 4b. Logo quadrada (capivara, sem texto, fundo transparente) para o
@@ -152,18 +180,56 @@ for i in $(seq 0 29); do
         -distort SRT ${ANG} +repage "build/plymouth/spinner/${i}.png"
 done
 
+# Prompt de senha do disco criptografado (LUKS), PRE-RENDERIZADO em PNG.
+# Por que PNG e nao texto no script: o pedido de senha roda no INITRAMFS, que
+# NAO embarca libpango/libcairo -- logo o Image.Text() do Plymouth nao desenha
+# texto nenhum ali (so imagens, como a logo e o spinner, aparecem). Com
+# Image.Text o prompt ficava invisivel e o boot PARECIA travado. Entao o texto
+# vem pronto em imagem. (BUG-45)
+# Texto em INGLES (so o splash): decisao de globalizacao da serie 2.x.
+# Fonte: resolve uma sans instalada; evita a variavel (caminho com [wght], que
+# atrapalha o ImageMagick) e cai p/ a Liberation (sempre presente); por fim,
+# sem -font, usa a default do proprio ImageMagick.
+PWFONT=$(fc-match -f '%%{file}' sans-serif 2>/dev/null || true)
+case "$PWFONT" in *'['*|'') PWFONT= ;; esac
+[ -n "$PWFONT" ] && [ -f "$PWFONT" ] || PWFONT=/usr/share/fonts/liberation-sans-fonts/LiberationSans-Regular.ttf
+[ -f "$PWFONT" ] || PWFONT=
+PWFONTOPT=""
+[ -n "$PWFONT" ] && PWFONTOPT="-font $PWFONT"
+"$CONVERT" -background none -fill white $PWFONTOPT -pointsize 26 \
+    label:"Type password to unlock disk" \
+    build/plymouth/password_prompt.png
+# Campo de senha: retangulo arredondado (borda translucida + leve preenchimento)
+# para deixar claro que ali se DIGITA a senha. As bolinhas aparecem dentro dele.
+"$CONVERT" -size 360x48 xc:none \
+    -stroke 'rgba(255,255,255,0.55)' -strokewidth 2 \
+    -fill 'rgba(255,255,255,0.07)' \
+    -draw "roundrectangle 1,1 358,46 12,12" \
+    build/plymouth/password_field.png
+# Bolinha branca: o script desenha uma por caractere digitado da senha.
+"$CONVERT" -size 18x18 xc:none -fill white -draw "circle 9,9 9,2" \
+    build/plymouth/bullet.png
+
 %install
 set -e
-DEFAULT_WP=%{_datadir}/backgrounds/capivaraos/capivaraos-desktop.png
+# Wallpaper padrao do Snout 2.x: "Snout do Ano" (capivaraos-wp-snout-year),
+# EXCLUSIVO do Snout (medalha "Snout of the Year" + logo branca no canto inferior
+# DIREITO, mesma posicao/altura/formato dos demais, com sombra leve p/ ler no fundo
+# claro). Os outros wp da marca (Luar, etc.)
+# seguem disponiveis no seletor como opcao.
+DEFAULT_WP=%{_datadir}/backgrounds/capivaraos/capivaraos-wp-snout-year.png
 
 # ── Wallpapers ───────────────────────────────────────────────────────────────
+# Serie 2.x: so os 8 wallpapers da marca (capivaraos-wp-*.png, os MESMOS do
+# Marsh 2.0). O conjunto do Snout 1.x (fotos CC BY-SA + variantes de cor) foi
+# removido; os wallpapers "padrao" continuam vindo do gnome-backgrounds da base.
+# CapivaraOS_Logo.png fica na pasta so como FONTE de pixmaps/plymouth (nao e
+# papel de parede), por isso e pulado aqui.
 install -d %{buildroot}%{_datadir}/backgrounds/capivaraos
-# Todos os wallpapers (incluindo fotos já em 4:3 nativas 1920×1440): direto da fonte
 for WP in backgrounds/*.png; do
     [ "$(basename "$WP")" = "CapivaraOS_Logo.png" ] && continue
     install -m 0644 "$WP" %{buildroot}%{_datadir}/backgrounds/capivaraos/
 done
-install -m 0644 backgrounds/CREDITOS.txt %{buildroot}%{_datadir}/backgrounds/capivaraos/
 
 # ── Pixmaps ──────────────────────────────────────────────────────────────────
 install -d %{buildroot}%{_datadir}/pixmaps
@@ -180,6 +246,8 @@ for SIZE in 16 22 24 32 36 48 64 96 128 256 512; do
         %{buildroot}%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/
     install -m 0644 "build/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-full-logo.png" \
         %{buildroot}%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/
+    install -m 0644 "build/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-round-logo.png" \
+        %{buildroot}%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/
 done
 
 # ── Registro dos wallpapers no seletor de fundo do GNOME Settings ──────────
@@ -192,69 +260,55 @@ cat > %{buildroot}%{_datadir}/gnome-background-properties/capivaraos.xml << 'EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
 <wallpapers>
+  <!-- Conjunto da marca da serie 2.x. "Snout do Ano" e o PADRAO (exclusivo Snout). -->
   <wallpaper deleted="false">
-    <name>CapivaraOS Azul</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop.png</filename>
+    <name>CapivaraOS Snout do Ano</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-snout-year.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Verde</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-verde.png</filename>
+    <name>CapivaraOS Série 2</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-serie2.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Roxo</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-roxo.png</filename>
+    <name>CapivaraOS Luar</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-moonlight.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Preto</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-preto.png</filename>
+    <name>CapivaraOS Pôr do Sol</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-sunset.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Azul (logo branca)</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-azul-branco.png</filename>
+    <name>CapivaraOS Dev</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-dev.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Verde (logo branca)</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-verde-branco.png</filename>
+    <name>CapivaraOS Quadrinhos</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-comics.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Roxo (logo branca)</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-roxo-branco.png</filename>
+    <name>CapivaraOS Abstrato 1</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-abstract-1.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Ipê Rosa</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-ipe.png</filename>
+    <name>CapivaraOS Abstrato 2</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-abstract-2.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Retrato</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-capincho.png</filename>
+    <name>CapivaraOS Abstrato 3</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-abstract-3.png</filename>
     <options>zoom</options>
   </wallpaper>
   <wallpaper deleted="false">
-    <name>CapivaraOS Taim</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-taim.png</filename>
-    <options>zoom</options>
-  </wallpaper>
-  <wallpaper deleted="false">
-    <name>CapivaraOS Natação</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-natacao.png</filename>
-    <options>zoom</options>
-  </wallpaper>
-  <wallpaper deleted="false">
-    <name>CapivaraOS Rio</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-salto.png</filename>
-    <options>zoom</options>
-  </wallpaper>
-  <wallpaper deleted="false">
-    <name>CapivaraOS Iberá</name>
-    <filename>/usr/share/backgrounds/capivaraos/capivaraos-desktop-foto-ibera.png</filename>
+    <name>CapivaraOS Abstrato 4</name>
+    <filename>/usr/share/backgrounds/capivaraos/capivaraos-wp-abstract-4.png</filename>
     <options>zoom</options>
   </wallpaper>
 </wallpapers>
@@ -269,6 +323,14 @@ install -m 0644 build/plymouth/logo.png \
 install -d %{buildroot}%{_datadir}/plymouth/themes/capivaraos/spinner
 install -m 0644 build/plymouth/spinner/*.png \
     %{buildroot}%{_datadir}/plymouth/themes/capivaraos/spinner/
+
+# Prompt de senha (LUKS) pre-renderizado -- ver justificativa no %build.
+install -m 0644 build/plymouth/password_prompt.png \
+    %{buildroot}%{_datadir}/plymouth/themes/capivaraos/password_prompt.png
+install -m 0644 build/plymouth/password_field.png \
+    %{buildroot}%{_datadir}/plymouth/themes/capivaraos/password_field.png
+install -m 0644 build/plymouth/bullet.png \
+    %{buildroot}%{_datadir}/plymouth/themes/capivaraos/bullet.png
 
 cat > %{buildroot}%{_datadir}/plymouth/themes/capivaraos/capivaraos.plymouth << 'EOF'
 [Plymouth Theme]
@@ -307,12 +369,13 @@ spinner.frame = 0;
 # reiniciar para aplicar atualizacoes offline (systemd system-update.target).
 is_updates = (Plymouth.GetMode() == "updates" || Plymouth.GetMode() == "system-upgrade");
 
+# Textos do splash em INGLES (globalizacao da serie 2.x).
 if (Plymouth.GetMode() == "shutdown" || Plymouth.GetMode() == "reboot") {
-    message_text = "Encerrando o CapivaraOS";
+    message_text = "Shutting down CapivaraOS";
 } else if (is_updates) {
-    message_text = "Instalando atualizações";
+    message_text = "Installing updates";
 } else {
-    message_text = "Inicializando o CapivaraOS";
+    message_text = "Starting CapivaraOS";
 }
 
 message.image = Image.Text(message_text, 1, 1, 1, 1, "Sans 14");
@@ -322,7 +385,7 @@ message.sprite.SetPosition(Window.GetWidth() / 2 - message.image.GetWidth() / 2,
 
 # ── Aviso + percentual, somente durante atualizacao offline ────────────────
 if (is_updates) {
-    warning.image = Image.Text("Não desligue o computador", 0.8, 0.8, 0.8, 1, "Sans 11");
+    warning.image = Image.Text("Don't turn off your computer", 0.8, 0.8, 0.8, 1, "Sans 11");
     warning.sprite = Sprite(warning.image);
     warning.sprite.SetPosition(Window.GetWidth() / 2 - warning.image.GetWidth() / 2,
                                 spinner.cy + 95, 1);
@@ -350,6 +413,69 @@ fun refresh_callback() {
     spinner.sprite.SetY(spinner.cy - img.GetHeight() / 2);
 }
 Plymouth.SetRefreshFunction(refresh_callback);
+
+# ── Campo de senha do disco criptografado (LUKS) ────────────────────────────
+# Sem SetDisplayPasswordFunction, com LUKS o Plymouth nao desenha campo nenhum e
+# o boot PARECE travado (o prompt so aparece em texto, via ESC).
+# IMPORTANTE: este callback roda no INITRAMFS, que NAO tem libpango/libcairo ->
+# Image.Text() NAO renderiza texto ali (fica invisivel). Por isso prompt, campo
+# e bolinha sao PNGs pre-renderizados no %build, desenhados como imagem --
+# exatamente como a logo e o spinner, que aparecem normalmente.
+# UX: enquanto o usuario digita NAO ha carregamento, entao ESCONDEMOS o spinner
+# e mostramos um campo ("Type password to unlock disk" + 1 bolinha/caractere).
+# O spinner e a mensagem "Starting CapivaraOS" voltam quando a senha e aceita
+# (display_normal) -- ai sim o sistema comeca a carregar.
+pw_prompt.image = Image("password_prompt.png");
+pw_field.image  = Image("password_field.png");
+pw_bullet.image = Image("bullet.png");
+pw_bullet_gap = 10;   # espaco horizontal entre bolinhas
+pw_bullet_max = 64;   # teto de bolinhas desenhadas
+
+fun display_password_callback(prompt_string, bullets) {
+    # esconde o estado "normal": aqui so se digita, nada carrega
+    message.sprite.SetOpacity(0);
+    spinner.sprite.SetOpacity(0);
+
+    # Texto "Type password to unlock disk" (acima do campo)
+    if (!pw_prompt.sprite) pw_prompt.sprite = Sprite(pw_prompt.image);
+    pw_prompt.sprite.SetPosition(Window.GetWidth() / 2 - pw_prompt.image.GetWidth() / 2,
+                                 spinner.cy - 36, 10);
+    pw_prompt.sprite.SetOpacity(1);
+
+    # Campo (retangulo arredondado)
+    if (!pw_field.sprite) pw_field.sprite = Sprite(pw_field.image);
+    field_top = spinner.cy + 6;
+    pw_field.sprite.SetPosition(Window.GetWidth() / 2 - pw_field.image.GetWidth() / 2,
+                                field_top, 9);
+    pw_field.sprite.SetOpacity(1);
+
+    # Uma bolinha por caractere, centralizadas dentro do campo
+    bw = pw_bullet.image.GetWidth();
+    total = bullets * bw + (bullets - 1) * pw_bullet_gap;
+    if (bullets < 1) total = 0;
+    start_x = Window.GetWidth() / 2 - total / 2;
+    by = field_top + (pw_field.image.GetHeight() - pw_bullet.image.GetHeight()) / 2;
+    for (i = 0; i < bullets && i < pw_bullet_max; i++) {
+        if (!pw_bullet[i].sprite) pw_bullet[i].sprite = Sprite(pw_bullet.image);
+        pw_bullet[i].sprite.SetPosition(start_x + i * (bw + pw_bullet_gap), by, 11);
+        pw_bullet[i].sprite.SetOpacity(1);
+    }
+    # esconde as bolinhas que sobraram (quando o usuario apaga caracteres)
+    for (i = bullets; i < pw_bullet_max; i++)
+        if (pw_bullet[i].sprite) pw_bullet[i].sprite.SetOpacity(0);
+}
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+
+fun display_normal_callback() {
+    # senha aceita: volta a mensagem e o spinner (agora sim carregando)
+    message.sprite.SetOpacity(1);
+    spinner.sprite.SetOpacity(1);
+    if (pw_prompt.sprite) pw_prompt.sprite.SetOpacity(0);
+    if (pw_field.sprite) pw_field.sprite.SetOpacity(0);
+    for (i = 0; i < pw_bullet_max; i++)
+        if (pw_bullet[i].sprite) pw_bullet[i].sprite.SetOpacity(0);
+}
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
 EOF
 
 # NOTA CapivaraOS: /etc/os-release/issue/issue.net NAO sao gerados aqui (em
@@ -402,6 +528,16 @@ cat > %{buildroot}%{_datadir}/cockpit/branding/capivaraos/branding.css << 'EOF'
     --pf-t--global--color--brand--default: var(--brand-default-light);
     --pf-t--global--color--brand--hover: var(--brand-default);
 }
+
+/* Esconde o bloco de feedback/QR da tela final do instalador. O anaconda-webui
+ * (src/components/installation/Feedback.jsx) renderiza um QR + link FIXO para
+ * https://discussion.fedoraproject.org/tag/anaconda -- nao ha configuracao para
+ * trocar a URL sem patchar o pacote. Como somos um remix, mandamos o usuario
+ * para a NOSSA pesquisa numa superficie propria (boas-vindas / COS Dev Center),
+ * nao para o Ask Fedora. O container do componente e .feedback-section. */
+.feedback-section {
+    display: none !important;
+}
 EOF
 
 # ── Decide de antemão o aviso de "repositórios de terceiros" do GNOME
@@ -447,12 +583,10 @@ picture-options='zoom'
 [org/gnome/desktop/screensaver]
 picture-uri='file://${DEFAULT_WP}'
 
-[org/gnome/desktop/interface]
-# Cor de destaque padrão (verde, cor da marca CapivaraOS). Chave nova do
-# GNOME (47+) para o sistema de "Accent Colors" -- não bloqueamos a chave,
-# o usuário pode trocar livremente em Configurações > Aparência.
-accent-color='green'
 EOF
+# NOTA: NÃO definimos accent-color -- padronizamos na cor de destaque padrão do
+# GNOME (azul). A marca CapivaraOS vem do wallpaper/logo, não de recolorir o
+# accent do sistema (decisão 2026-09-29, alinhado ao que se fez no Marsh).
 
 # ── Terminal fixado no dash (favorite-apps, system-wide via dconf) ───────────
 # No GNOME stock o terminal (Ptyxis, o emulador padrao do Fedora) so aparece
@@ -494,6 +628,27 @@ picture-options='zoom'
 logo='/usr/share/pixmaps/capivaraos-whitelogo-med.png'
 EOF
 
+# ── Hostname da marca: nao deixar o NetworkManager sobrescrever "capivaraos" ───
+# DEFAULT_HOSTNAME=capivaraos (no os-release) vira o hostname transient quando o
+# /etc/hostname (static) esta vazio. Porem o NetworkManager, no hostname-mode
+# padrao, faz um reverse-DNS do IP do lease DHCP e sobrescreve o transient. Em VM
+# (libvirt/Boxes) e em roteadores que registram o hostname do DHCP no DNS local,
+# esse lookup devolve "localhost-live" (nome que a midia live mandou no DHCP,
+# reusando a mesma MAC no install) -> o sistema instalado nasce "localhost-live"
+# em vez de "capivaraos". E bug do NetworkManager (nao do desktop), entao vale
+# igual no GNOME. Fix: hostname-mode=none -> o NM nao mexe no hostname; o
+# DEFAULT_HOSTNAME prevalece e um hostname escolhido pelo usuario (hostnamectl /
+# static) continua respeitado. Arquivo estatico (empacotado em %files). O
+# diretorio conf.d pertence ao pacote NetworkManager (sempre presente no GNOME),
+# por isso so empacotamos o arquivo, nao o %dir.
+install -d %{buildroot}%{_sysconfdir}/NetworkManager/conf.d
+cat > %{buildroot}%{_sysconfdir}/NetworkManager/conf.d/00-capivaraos-hostname.conf << 'EOF'
+# CapivaraOS: nao deixar o NetworkManager sobrescrever o hostname da marca
+# (capivaraos, de DEFAULT_HOSTNAME no os-release) com o nome do lease DHCP.
+[main]
+hostname-mode=none
+EOF
+
 # ── Perfil do Anaconda: faz o instalador reconhecer o CapivaraOS (BUG-38+BUG-42) ─
 # O Anaconda casa o perfil de instalacao pelo os_id do /etc/os-release. Como o
 # nosso ID e "capivaraos" (nao "fedora"), NENHUM perfil casava e o instalador
@@ -526,6 +681,64 @@ base_profile = fedora
 [Profile Detection]
 os_id = capivaraos
 EOF
+
+# ── Snapshots pré-upgrade: config 'root' do snapper criada no 1o boot ────────
+# O capivaraos-upgrade (PROD-116) só tira snapshot automático antes do upgrade
+# in-place se a raiz for btrfs E existir uma config 'root' do snapper. O pacote
+# snapper (ver %packages do kickstart) não cria essa config sozinho, e o
+# instalador GNOME não a configura. Então um oneshot de 1o boot a cria no
+# sistema INSTALADO (na live a raiz não é btrfs -> o script sai sem fazer nada).
+# ConditionPathExists=!... faz o systemd pular o serviço depois de criada.
+install -d %{buildroot}%{_libexecdir}/capivaraos
+cat > %{buildroot}%{_libexecdir}/capivaraos/snapper-firstboot << 'EOF'
+#!/bin/bash
+# Cria a config 'root' do snapper se a raiz for btrfs e ainda não existir.
+# Idempotente; pensado para rodar uma vez no 1o boot do sistema instalado.
+set -e
+[ "$(findmnt -no FSTYPE /)" = btrfs ] || exit 0
+command -v snapper >/dev/null 2>&1 || exit 0
+snapper list-configs 2>/dev/null | grep -qw root && exit 0
+snapper -c root create-config /
+# Limites conservadores: sem timeline automática (não encher o disco); mantém
+# os snapshots numerados (os pré/pós de transação e o do capivaraos-upgrade).
+snapper -c root set-config TIMELINE_CREATE=no NUMBER_CLEANUP=yes NUMBER_LIMIT=10 NUMBER_LIMIT_IMPORTANT=10 || true
+systemctl enable --now snapper-cleanup.timer >/dev/null 2>&1 || true
+EOF
+chmod 0755 %{buildroot}%{_libexecdir}/capivaraos/snapper-firstboot
+
+install -d %{buildroot}%{_unitdir}
+cat > %{buildroot}%{_unitdir}/capivaraos-snapper-setup.service << 'EOF'
+[Unit]
+Description=CapivaraOS: cria a configuracao snapper 'root' no 1o boot (btrfs)
+Documentation=https://capivaraos.org
+# Pula assim que a config existir (nada de stamp); e so em raiz btrfs.
+ConditionPathExists=!/etc/snapper/configs/root
+After=local-fs.target
+Before=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/capivaraos/snapper-firstboot
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# ── Logo próprio do fastfetch (FEAT-138 [Snout] / FEAT-50) ────────────────────
+# O fastfetch mostra o logo ASCII do Fedora (escolhido por ID_LIKE do os-release).
+# Trocamos pela cabeça de capivara da marca + "CapivaraOS" em verde. A arte vai
+# em /usr/share/capivaraos/fastfetch/ e o config.jsonc (logo + a lista de módulos
+# padrão -- um config só-logo imprimiria APENAS a capivara, sem as infos) em
+# /etc/skel E /etc/xdg -- este ultimo p/ valer na sessao LIVE
+# (fastfetch le XDG_CONFIG_DIRS=/etc/xdg). Sem auto-run (terminal limpo, decisão
+# da comunidade): o logo só aparece ao rodar `fastfetch`. Portado do Marsh (FEAT-136).
+install -d %{buildroot}%{_datadir}/capivaraos/fastfetch
+install -m 0644 fastfetch/capivara.txt %{buildroot}%{_datadir}/capivaraos/fastfetch/capivara.txt
+for FDIR in %{buildroot}%{_sysconfdir}/skel/.config %{buildroot}%{_sysconfdir}/xdg; do
+    install -d "$FDIR/fastfetch"
+    install -m 0644 fastfetch/config.jsonc "$FDIR/fastfetch/config.jsonc"
+done
 
 %post
 # Splash de boot CapivaraOS
@@ -571,7 +784,7 @@ fi
 # caminhos em %files (evita conflito de arquivo no dnf, mesmo princípio
 # usado para /etc/os-release).
 for SIZE in 16 22 24 32 36 48 64 96 128 256 512; do
-    SRC=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-full-logo.png
+    SRC=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-round-logo.png
     DST=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/fedora-logo-icon.png
     [ -f "$SRC" ] && [ -d "$(dirname "$DST")" ] && cp -f "$SRC" "$DST"
 done
@@ -622,41 +835,46 @@ Theme=capivaraos
 EOF
 plymouth-set-default-theme capivaraos >/dev/null 2>&1 || true
 
+# Habilita o oneshot que cria a config 'root' do snapper no 1o boot (PROD-116).
+# %posttrans roda com systemd/snapper ja instalados; o enable offline apenas cria
+# o symlink WantedBy — o servico so age no 1o boot do sistema instalado (btrfs).
+systemctl enable capivaraos-snapper-setup.service >/dev/null 2>&1 || true
+
 # /etc/os-release, /etc/issue, /etc/issue.net (fedora-release-common):
 # escritos aqui (em vez de %files) para evitar conflito de arquivo no dnf.
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 1.1.15"
+VERSION="Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
-VERSION_ID=44
+VERSION_ID=45
 VERSION_CODENAME=snout
-PLATFORM_ID="platform:f44"
-PRETTY_NAME="CapivaraOS Snout 1.1.15"
+PLATFORM_ID="platform:f45"
+PRETTY_NAME="CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 ANSI_COLOR="0;32"
-LOGO=capivaraos-full-logo
-CPE_NAME="cpe:/o:capivaraos:capivaraos:44"
+LOGO=capivaraos-round-logo
+CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
 DEFAULT_HOSTNAME=capivaraos
 HOME_URL="https://capivaraos.org"
 DOCUMENTATION_URL="https://capivaraos.org"
 SUPPORT_URL="https://capivaraos.org"
 BUG_REPORT_URL="https://capivaraos.org"
 REDHAT_BUGZILLA_PRODUCT="Fedora"
-REDHAT_BUGZILLA_PRODUCT_VERSION=44
+REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
-REDHAT_SUPPORT_PRODUCT_VERSION=44
-VARIANT="Snout 1.1.15"
+REDHAT_SUPPORT_PRODUCT_VERSION=45
+VARIANT="Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 1.1.15 \n \l
+CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)} \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 1.1.15
+CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}
 EOF
 
 # ── Reaplica os-release apos qualquer atualizacao futura do sistema ────────
@@ -680,37 +898,37 @@ EOF
 grep -q '^NAME="CapivaraOS"' %{_prefix}/lib/os-release 2>/dev/null && exit 0
 cat > %{_sysconfdir}/os-release << 'EOF'
 NAME="CapivaraOS"
-VERSION="Snout 1.1.15"
+VERSION="Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 RELEASE_TYPE=stable
 ID=capivaraos
 ID_LIKE=fedora
-VERSION_ID=44
+VERSION_ID=45
 VERSION_CODENAME=snout
-PLATFORM_ID="platform:f44"
-PRETTY_NAME="CapivaraOS Snout 1.1.15"
+PLATFORM_ID="platform:f45"
+PRETTY_NAME="CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 ANSI_COLOR="0;32"
-LOGO=capivaraos-full-logo
-CPE_NAME="cpe:/o:capivaraos:capivaraos:44"
+LOGO=capivaraos-round-logo
+CPE_NAME="cpe:/o:capivaraos:capivaraos:45"
 DEFAULT_HOSTNAME=capivaraos
 HOME_URL="https://capivaraos.org"
 DOCUMENTATION_URL="https://capivaraos.org"
 SUPPORT_URL="https://capivaraos.org"
 BUG_REPORT_URL="https://capivaraos.org"
 REDHAT_BUGZILLA_PRODUCT="Fedora"
-REDHAT_BUGZILLA_PRODUCT_VERSION=44
+REDHAT_BUGZILLA_PRODUCT_VERSION=45
 REDHAT_SUPPORT_PRODUCT="Fedora"
-REDHAT_SUPPORT_PRODUCT_VERSION=44
-VARIANT="Snout 1.1.15"
+REDHAT_SUPPORT_PRODUCT_VERSION=45
+VARIANT="Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}"
 VARIANT_ID=snout
 EOF
 
 cat > %{_sysconfdir}/issue << 'EOF'
-CapivaraOS Snout 1.1.15 \n \l
+CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)} \n \l
 
 EOF
 
 cat > %{_sysconfdir}/issue.net << 'EOF'
-CapivaraOS Snout 1.1.15
+CapivaraOS Snout 2.0.0%{?cos_label: (%{cos_label}, preview)}
 EOF
 
 for kver in $(ls /lib/modules 2>/dev/null); do
@@ -732,10 +950,10 @@ done
 # /usr/share/icons/hicolor é mexido por muitos pacotes, então a guarda abaixo
 # faz o caso comum (nossa logo já no lugar) sair de imediato.
 %transfiletriggerin -- %{_datadir}/icons/hicolor
-cmp -s %{_datadir}/icons/hicolor/48x48/apps/capivaraos-full-logo.png \
+cmp -s %{_datadir}/icons/hicolor/48x48/apps/capivaraos-round-logo.png \
        %{_datadir}/icons/hicolor/48x48/apps/fedora-logo-icon.png && exit 0
 for SIZE in 16 22 24 32 36 48 64 96 128 256 512; do
-    SRC=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-full-logo.png
+    SRC=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/capivaraos-round-logo.png
     DST=%{_datadir}/icons/hicolor/${SIZE}x${SIZE}/apps/fedora-logo-icon.png
     [ -f "$SRC" ] && [ -d "$(dirname "$DST")" ] && cp -f "$SRC" "$DST"
 done
@@ -756,7 +974,6 @@ for PAIR in \
 done
 
 %files
-%license backgrounds/CREDITOS.txt
 %{_datadir}/backgrounds/capivaraos/
 %{_datadir}/pixmaps/capivaraos.png
 %{_datadir}/pixmaps/capivaraos-logo.png
@@ -765,6 +982,7 @@ done
 %{_datadir}/pixmaps/capivaraos-whitelogo-med.png
 %{_datadir}/icons/hicolor/*/apps/capivaraos-logo.png
 %{_datadir}/icons/hicolor/*/apps/capivaraos-full-logo.png
+%{_datadir}/icons/hicolor/*/apps/capivaraos-round-logo.png
 %{_datadir}/gnome-background-properties/capivaraos.xml
 %{_datadir}/plymouth/themes/capivaraos/
 %{_datadir}/cockpit/branding/capivaraos/
@@ -776,8 +994,171 @@ done
 %config(noreplace) %{_sysconfdir}/dconf/profile/gdm
 %config(noreplace) %{_sysconfdir}/dconf/db/gdm.d/01-capivaraos-background
 %{_sysconfdir}/anaconda/profile.d/capivaraos.conf
+%{_sysconfdir}/NetworkManager/conf.d/00-capivaraos-hostname.conf
+%dir %{_datadir}/capivaraos
+%{_datadir}/capivaraos/fastfetch/
+%{_sysconfdir}/skel/.config/fastfetch/
+%{_sysconfdir}/xdg/fastfetch/
+%{_libexecdir}/capivaraos/snapper-firstboot
+%{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Wed Nov 04 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-1
+- Corte de RELEASE ESTAVEL do 2.0 (PROD-181): os-release/issue/issue.net/VARIANT
+  e Summary/description agora "CapivaraOS Snout 2.0.0" limpo -- o rotulo de
+  preview virou condicional %%{?cos_label} e o macro cos_label foi desativado
+  (sem alphaN). Release 0.16.alpha16 -> 1. (reference osrelease_alpha_label.)
+- Hostname da marca: drop-in /etc/NetworkManager/conf.d/00-capivaraos-hostname.conf
+  com hostname-mode=none. O sistema instalado nascia "localhost-live" porque o
+  NetworkManager sobrescrevia o DEFAULT_HOSTNAME=capivaraos com o reverse-DNS do
+  lease DHCP; com hostname-mode=none o NM nao mexe no hostname. E bug do NM, nao
+  do desktop -- mesmo fix do Marsh, vale igual no GNOME.
+- capivaraos-repos + capivaraos-upgrade embarcados na ISO (kickstart + build),
+  habilitando o update in-place assinado e o upgrade de versao sem reformatar.
+
+* Sun Oct 25 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.16.alpha16
+- Plymouth (capivaraos.script): polimento do prompt de senha LUKS (validado em VM
+  no alpha15). Durante a digitação o spinner é ESCONDIDO (nada está carregando) e
+  aparece um campo (retângulo arredondado, novo password_field.png) com o texto +
+  as bolinhas, deixando claro que ali se digita a senha. O spinner e a mensagem
+  voltam quando a senha é aceita (começo do carregamento). Textos do splash
+  passam a INGLÊS (globalização da série 2.x): "Type password to unlock disk",
+  "Starting CapivaraOS", "Shutting down CapivaraOS", "Installing updates",
+  "Don't turn off your computer".
+
+* Sun Oct 25 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.15.alpha15
+- Plymouth (capivaraos.script): corrige o prompt de senha do disco criptografado
+  (LUKS), que no alpha14 ainda nao aparecia. Causa comprovada: o pedido de senha
+  roda no INITRAMFS, que nao embarca libpango/libcairo, entao o Image.Text() do
+  Plymouth nao renderiza texto ali -- o prompt ficava invisivel (so a logo/spinner,
+  que sao PNG, apareciam) e o boot parecia travado. Agora o texto "Digite a senha
+  para desbloquear o disco" e as bolinhas (uma por caractere) sao PNGs
+  pre-renderizados no %build e desenhados como imagem, que funcionam no initramfs.
+
+* Sat Oct 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.14.alpha14
+- Plymouth (capivaraos.script): adiciona o campo de senha do disco criptografado
+  (LUKS). Sem SetDisplayPasswordFunction, com disco cifrado o splash não desenhava
+  campo nenhum e o boot PARECIA travado (o prompt só aparecia em texto, via ESC).
+  Agora SetDisplayPasswordFunction/SetDisplayNormalFunction escondem a mensagem
+  normal e mostram "Digite a senha para desbloquear o disco" + bolinhas abaixo do
+  spinner. Bug cross-spin (achado no Pup, PR #7). Nomes adaptados ao script do Snout.
+
+* Sat Oct 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.13.alpha13
+- Instalador (Anaconda WebUI): esconde o bloco de feedback/QR da tela final que
+  apontava, com URL fixa no pacote anaconda-webui, para o Ask Fedora
+  (discussion.fedoraproject.org/tag/anaconda). Regra CSS no branding do Cockpit
+  (.feedback-section { display:none }). A pesquisa própria do CapivaraOS será
+  oferecida numa superfície nossa (boas-vindas / COS Dev Center), não no
+  instalador. Sem problema de marca: somos um remix e a URL do Fedora é fixa.
+
+* Tue Oct 13 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.12.alpha12
+- Fastfetch: corrige o config.jsonc que mostrava SÓ o logo (a cabeça de capivara)
+  sem nenhuma info do sistema. Ao passar um config próprio, o fastfetch não aplica
+  a lista de módulos padrão sozinho — um config só-"logo" imprime apenas o logo.
+  Adicionada a lista "modules" padrão ao config.jsonc; o logo/cor fica intocado.
+  Provado no fastfetch 2.69. (reference_fastfetch_logo / aviso vindo do Herd.)
+- os-release/issue: o rótulo da pré-release (VERSION/PRETTY_NAME/VARIANT/issue)
+  estava preso em "alpha11" enquanto a ISO já era alpha12 — o fastfetch/Sobre
+  reportavam a alpha errada. Corrigido para alpha12 e parametrizado num macro
+  único (%%global cos_label) para não divergir do Release em bumps futuros.
+
+* Fri Oct 09 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.11.alpha11
+- Título do menu de boot (GRUB) agora acompanha a versão do CapivaraOS + Fedora:
+  "CapivaraOS Snout 2 45" (2 = série do CapivaraOS, 45 = Fedora). Feito pelo lorax
+  no COMPOSE via --project="CapivaraOS Snout 2" + @VERSION@ (releasever) no
+  build-all.sh — mesmo approach do Pup. O retítulo pós-build via xorriso NÃO pega
+  no F45 (foi removido). Antes era só "CapivaraOS Snout 45".
+- Wallpaper "Snout do Ano": a logo do CapivaraOS foi movida do canto inferior
+  esquerdo para o DIREITO (mesma posição dos demais wallpapers), com sombra leve
+  ao redor para não sumir no fundo claro.
+
+* Fri Oct 09 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.10.alpha10
+- Novo wallpaper EXCLUSIVO do Snout: "Snout do Ano" (capivaraos-wp-snout-year.png,
+  3840x2160) — medalha "Snout of the Year" + logo branca do CapivaraOS no canto
+  inferior ESQUERDO (mesma altura/formato dos demais, com halo escuro suave p/ ler
+  no fundo claro). Vira o wallpaper PADRAO do Snout (DEFAULT_WP) e entra no topo do
+  seletor de fundo do GNOME; os demais (Luar, Série 2, etc.) seguem como opção.
+  Metadados conferidos/limpos (-strip; sem EXIF/IPTC/XMP). So no Snout.
+
+* Thu Oct 08 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.9.alpha9
+- ISO passa a trazer pré-instalado o COS Config Center (cos-config 0.11.1), a
+  central de configuração do CapivaraOS (PROD-141/PROD-5). O pacote NÃO é buildado
+  aqui: vem já ASSINADO do repositório (repo.capivaraos.org/snout/f45/x86_64/<canal>,
+  padrão testing) e o build-all.sh baixa, confere a assinatura (gpgcheck + chave do
+  projeto) e só então inclui. Integração mesclada pelo PR #1 (commit 588a07e); este
+  bump oficializa a ISO com o app. Só rótulo/versão da branding aqui.
+
+* Tue Sep 29 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.8.alpha8
+- Padroniza no visual padrão do GNOME (a pedido da comunidade): (1) remove o
+  accent-color='green' do dconf -- o realce do sistema (foco, botões, polkit)
+  volta ao AZUL padrão do GNOME; a marca vem do wallpaper/logo, não de recolorir
+  o accent. (2) Avatar padrão (.face) deixa de ser a capivara MARROM sobre branco
+  e passa a ser a logo REDONDA navy (capivaraos-round-logo). Instalador (Anaconda)
+  e ANSI_COLOR do terminal seguem como estão (decisão: reverter só o accent).
+
+* Tue Sep 29 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.7.alpha7
+- BLOCKER de boot (PROD-133): remove o /etc/kernel/cmdline "fantasma" no %post do
+  capivaraos-post-branding.ks (após o loop do dracut). O arquivo nascia no build da
+  live com o UUID de raiz do build e sem rootflags=subvol=root; o liveimg o copiava
+  pro alvo e o 1º update de kernel gerava uma BLS quebrada -> dracut emergency mode.
+  Removido, o kernel-install deriva a cmdline do /proc/cmdline real do instalado
+  (root+rootflags corretos p/ qualquer layout). Espelhado do Marsh (commit 0bbc113).
+
+* Thu Sep 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.6.alpha6
+- Logo redonda navy também no painel "Sobre" do GNOME: os-release LOGO= passa de
+  capivaraos-full-logo para capivaraos-round-logo (o GNOME 49 do F45 usa o LOGO= do
+  os-release no painel Sobre). NÃO mexe no capivaraos-whitelogo-med, que também é a
+  logo da tela de login do GDM — o login segue com a logo branca.
+
+* Thu Sep 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.5.alpha5
+- Logo redonda navy nas telas da distro: a tela de boas-vindas (gnome-initial-setup)
+  e o ícone da distro no dock passam a usar a nova logo REDONDA (capivara branca +
+  "CapivaraOS" num círculo azul-escuro) no lugar da logo marrom. Fonte
+  icons/capivaraos-round-logo.png (circular, cantos transparentes); gera os tamanhos
+  hicolor "capivaraos-round-logo" e o override do fedora-logo-icon (%post +
+  %transfiletriggerin) passa a copiá-la. O capivaraos-full-logo (os-release LOGO= /
+  painel "Sobre") fica intacto. Também alinha o build-all.sh (estava em alpha3
+  enquanto o branding já estava em alpha4).
+
+* Thu Sep 24 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.4.alpha4
+- Logo próprio do CapivaraOS no fastfetch (FEAT-138/FEAT-50): substitui o logo ASCII
+  do Fedora pela capivara + "CapivaraOS" (verde #15B22C). Arte em
+  /usr/share/capivaraos/fastfetch/capivara.txt + config.jsonc (só o logo) em
+  /etc/skel/.config/fastfetch e /etc/xdg/fastfetch. Portado do Marsh (FEAT-136); sem
+  auto-run (terminal limpo) — aparece ao rodar `fastfetch`.
+
+* Mon Sep 21 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.3.alpha3
+- Wallpaper novo da marca "Série 2" (capivaraos-wp-serie2.png, 3840x2160) — o hero
+  verde da série 2, portado do Pup 2.x (fonte brand-assets/). Entra no seletor de
+  fundo do GNOME junto dos demais; o padrão segue "Luar" (moonlight), como no Pup.
+
+* Fri Sep 18 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.2.alpha2
+- Snapshots "atualize sem medo" (PROD-116): o Snout 2.x passa a criar a config
+  'root' do snapper no 1o boot (oneshot capivaraos-snapper-setup.service +
+  /usr/libexec/capivaraos/snapper-firstboot), em raiz btrfs. Sem isso o
+  capivaraos-upgrade nao tirava snapshot automatico antes do upgrade in-place
+  (so instalar o pacote snapper, como o Marsh faz, nao basta — falta a config).
+  Na sessao live e no-op (raiz nao e btrfs). Pacotes snapper + btrfs-assistant
+  entram pelo %packages do kickstart. Falta validar em VM instalada.
+
+* Fri Sep 18 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.1.alpha1
+- Primeira build da serie 2.x do Snout: rebase para Fedora 45 (base do 2.0) — PROD-114.
+  O F45 Beta saiu (2026-09-18). Repo novo capivaraos-snout-next (clonado do
+  capivaraos-snout-fedora p/ preservar a base GNOME + o fix do BUG-42), branch
+  rebase-f45. Repoint do compose: build-all.sh --releasever=45, base do kickstart
+  f44 -> f45 (fedora-45/updates-released-f45), trava de updates em 45. os-release/
+  issue -> Fedora 45 + "Snout 2.0.0 (%{cos_label}, preview)". Snout CONTINUA GNOME.
+  Versionamento pre-release "0.N.alphaN.snout"; "2.0.0-1.snout" reservado p/ o
+  lancamento publico conjunto das 3 spins (PROD-61). SMOKE BUILD p/ levantar
+  quebras (GNOME/GDM no F45, Anaconda 45) — NAO cortar ISO publica do F45 antes do GA.
+- Wallpapers da marca da serie 2.x (PROD-115): so os MESMOS 8 do Marsh 2.0 (Luar,
+  Por do Sol, Dev, Quadrinhos, Abstrato 1-4), empacotados e registrados no seletor
+  de fundo do GNOME; padrao passa a ser "Luar" (moonlight), igual ao Marsh. O
+  conjunto proprio do Snout 1.x (7 fotos CC BY-SA do Wikimedia + variantes de cor +
+  capivaraos-wallpaper.png) foi REMOVIDO do 2.x; os wallpapers "padrao" seguem vindo
+  do gnome-backgrounds da base. Removidos tambem CREDITOS.txt (era das fotos) e os
+  scripts regen-photo/solid-wallpapers.sh; tags CC-BY-SA saem da License.
+
 * Sat Aug 22 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 1.1.15-1
 - CORRIGE a tela de login (BUG-42): sem autologin, o GDM nao mostrava a tela de
   login -- entrava direto numa "sessao fantasma" (greeter quebrado, rodando como

@@ -1,6 +1,6 @@
 #version=DEVEL
 # =============================================================================
-# CapivaraOS Snout - Fedora 44 (GNOME) - kickstart principal
+# CapivaraOS Snout - Fedora 45 (GNOME) - kickstart principal
 # =============================================================================
 #
 # Spin "completa" do CapivaraOS sobre o ambiente GNOME oficial do Fedora
@@ -22,7 +22,7 @@
 #       --project="CapivaraOS Snout" --make-iso --iso-only \
 #       --iso-name=CapivaraOS-Snout-1.0.1-x86_64.iso \
 #       --volid="CapivaraOS Snout 1.0.1" --variant="CapivaraOS Snout" \
-#       --releasever=44
+#       --releasever=45
 #
 # NOTA: o anaconda resolve "%include caminho.ks" em relação ao seu próprio
 # cwd (não ao diretório deste arquivo), por isso o ks-flatten.py acima é
@@ -101,6 +101,23 @@ git
 nano
 vim-enhanced
 @development-tools
+# COS Dev Center: app de onboarding de 1o boot (GTK4/libadwaita) que liga os
+# extras opcionais da estacao de dev em um clique (IA local, trilhas, GPU,
+# ferramentas, gh) e o "Atualizar o CapivaraOS" (PROD-116/117).
+capivara-central
+# -- COS Config Center: central de configuracao (codecs, firewall, discos, rede,
+# idioma...). Pacote ja assinado, baixado do nosso repositorio pelo build-all.sh
+# para o repo local capivaraos-local.
+cos-config
+
+# ===== UPDATE IN-PLACE (repo assinado + upgrade de versao) =====
+# capivaraos-repos: instala o repositorio de updates assinado (repo.capivaraos.org)
+# + a chave GPG do projeto, habilitando o "atualize sem formatar" via dnf/GNOME
+# Software. capivaraos-upgrade: ferramenta de upgrade de versao (2.x -> ...) com
+# snapshot pre-upgrade. Ambos buildados localmente pelo build-all.sh; o
+# capivaraos-upgrade depende de capivaraos-repos. (FEAT-111, PROD-116/117.)
+capivaraos-repos
+capivaraos-upgrade
 
 # ===== FONTES =====
 liberation-fonts
@@ -114,6 +131,14 @@ google-noto-emoji-fonts
 # grupo "printing"; mantemos o system-config-printer explícito por
 # paridade com as demais spins (GUI clássica de configuração de impressoras).
 system-config-printer
+
+# ===== SNAPSHOTS ("atualize sem medo") =====
+# Btrfs é o padrão do instalador; snapper dá os snapshots pré/pós. A config
+# "root" do snapper é criada no 1o boot pelo capivaraos-snapper-setup.service
+# (do capivaraos-branding) — sem ela o capivaraos-upgrade não tira snapshot
+# automático antes do upgrade in-place (PROD-116). btrfs-assistant = GUI.
+snapper
+btrfs-assistant
 
 %end
 

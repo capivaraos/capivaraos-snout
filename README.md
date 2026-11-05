@@ -29,7 +29,7 @@ capivaraos-snout-fedora/
 ├── PACKAGES.md                  # Mapeamento de pacotes (espelha a spin Marsh)
 ├── README.md                    # Este arquivo
 ├── branding/                    # Assets de identidade visual (fonte para o RPM)
-│   ├── backgrounds/               # Wallpapers + CREDITOS.txt (CC BY-SA)
+│   ├── backgrounds/               # Wallpapers da marca 2.x (os mesmos do Marsh 2.0)
 │   └── icons/                     # Logos do CapivaraOS
 ├── kickstart/
 │   ├── capivaraos-snout.ks        # Kickstart principal (ponto de entrada)

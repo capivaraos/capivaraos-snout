@@ -26,6 +26,20 @@ for kver in $(ls /lib/modules); do
     dracut -f --no-hostonly --no-hostonly-cmdline "/boot/initramfs-${kver}.img" "${kver}"
 done
 
+# ── BLOCKER de boot (PROD-133): remove o /etc/kernel/cmdline "fantasma" ──────
+# Este %post roda no BUILD da live. O arquivo /etc/kernel/cmdline nasce aqui com
+# o UUID de raiz do AMBIENTE DE BUILD e SEM rootflags=subvol=root (btrfs). O
+# instalador live (liveimg) COPIA o rootfs pro alvo, arrastando esse arquivo; o
+# Anaconda escreve as entradas BLS do install corretas mas NAO corrige este
+# arquivo. Como o kernel-install compoe a linha options= de TODO kernel novo a
+# partir dele, o 1o update de kernel gera uma BLS com root inexistente/sem subvol
+# -> dracut emergency mode. Removendo (como faz o live padrao do Fedora), o
+# kernel-install passa a derivar do /proc/cmdline REAL do sistema instalado
+# (root=UUID correto + rootflags=subvol=root), valido p/ qualquer layout. Como o
+# %post roda no build, nao da p/ escrever o valor certo aqui -> remover e o certo.
+# Espelhado do Marsh (commit 0bbc113). Ver reference_etc_kernel_cmdline_ghost.
+rm -f /etc/kernel/cmdline /usr/lib/kernel/cmdline
+
 # ── Idioma: pt_BR com fallback para en_US ───────────────────────────────────
 if [ -f /etc/locale.conf ]; then
     sed -i '/^LANGUAGE=/d' /etc/locale.conf

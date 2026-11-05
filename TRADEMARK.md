@@ -29,10 +29,10 @@ projeto. Para usos da marca fora deste escopo, fale com o Projeto CapivaraOS.
 
 ## Materiais de terceiros
 
-Os **wallpapers fotográficos** embarcados nesta spin **não** são do projeto: são
-fotografias de capivaras de terceiros, obtidas no Wikimedia Commons sob licenças
-**Creative Commons Atribuição-CompartilhaIgual (CC BY-SA 3.0 e 4.0)**. A autoria
-e a licença de cada foto estão em
-[`backgrounds/CREDITOS.txt`](backgrounds/CREDITOS.txt) e gravadas na própria
-imagem. Essas fotos seguem a licença CC BY-SA original, **não** a marca do
-CapivaraOS.
+A partir da série 2.x, esta spin **não embarca mais wallpapers fotográficos de
+terceiros**. Os wallpapers de fotos de capivaras (Wikimedia Commons, CC BY-SA
+3.0/4.0) que acompanhavam a série 1.x foram removidos; o conjunto de planos de
+fundo passou a ser o da marca da série 2.x (os mesmos do Marsh 2.0), arte
+original do projeto sob a licença do CapivaraOS. Os wallpapers "padrão" adicionais
+disponíveis no seletor vêm do pacote `gnome-backgrounds` da base Fedora, sob suas
+próprias licenças.
