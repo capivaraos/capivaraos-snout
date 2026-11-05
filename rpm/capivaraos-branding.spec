@@ -128,7 +128,7 @@ mkdir -p build/pixmaps
 # círculo azul-escuro). O GNOME exibe o avatar recortado em círculo, então a
 # logo redonda encaixa direto. Fonte: icons/capivaraos-round-logo.png (já
 # circular, cantos transparentes). Antes era a capivara marrom sobre branco
-# (trocado 2026-09-29 a pedido do dono, junto da revisão de cores).
+# (trocado 2026-09-29 a pedido da comunidade, junto da revisão de cores).
 "$CONVERT" icons/capivaraos-round-logo.png \
     -resize 256x256 build/pixmaps/capivaraos-face.png
 
@@ -732,7 +732,7 @@ EOF
 # padrão -- um config só-logo imprimiria APENAS a capivara, sem as infos) em
 # /etc/skel E /etc/xdg -- este ultimo p/ valer na sessao LIVE
 # (fastfetch le XDG_CONFIG_DIRS=/etc/xdg). Sem auto-run (terminal limpo, decisão
-# do dono): o logo só aparece ao rodar `fastfetch`. Portado do Marsh (FEAT-136).
+# da comunidade): o logo só aparece ao rodar `fastfetch`. Portado do Marsh (FEAT-136).
 install -d %{buildroot}%{_datadir}/capivaraos/fastfetch
 install -m 0644 fastfetch/capivara.txt %{buildroot}%{_datadir}/capivaraos/fastfetch/capivara.txt
 for FDIR in %{buildroot}%{_sysconfdir}/skel/.config %{buildroot}%{_sysconfdir}/xdg; do
@@ -1089,7 +1089,7 @@ done
   bump oficializa a ISO com o app. Só rótulo/versão da branding aqui.
 
 * Tue Sep 29 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-0.8.alpha8
-- Padroniza no visual padrão do GNOME (a pedido do dono): (1) remove o
+- Padroniza no visual padrão do GNOME (a pedido da comunidade): (1) remove o
   accent-color='green' do dconf -- o realce do sistema (foco, botões, polkit)
   volta ao AZUL padrão do GNOME; a marca vem do wallpaper/logo, não de recolorir
   o accent. (2) Avatar padrão (.face) deixa de ser a capivara MARROM sobre branco
