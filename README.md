@@ -1,14 +1,18 @@
-# CapivaraOS Snout — Fedora 44 (GNOME)
+# CapivaraOS Snout — Fedora 45 (GNOME)
 
 Variante do CapivaraOS construída sobre o ambiente **GNOME** oficial do
 Fedora (Workstation), usando as mesmas ferramentas das demais spins do
 projeto: `kickstart` + `livemedia-creator` (lorax) para a imagem, e
 **Anaconda** como instalador.
 
-Espelha o conjunto de pacotes da spin Marsh (KDE, `../capivaraos-marsh-fedora/`)
+Espelha o conjunto de pacotes da spin Marsh (KDE, `../capivaraos-marsh/`)
 — ver `PACKAGES.md` — mas usa a identidade visual **padrão do GNOME**, sem
 dock/layout customizado estilo macOS (diferente da Marsh — decisão
 explícita para o Snout).
+
+Este repositório é a **Série 2** (2.0.0), sobre o Fedora 45 (GNOME 51). A Série 1,
+baseada no Fedora 44, está congelada em
+[`capivaraos-snout-fedora`](https://github.com/capivaraos/capivaraos-snout-fedora).
 
 > **Nota sobre o kickstart `upstream/`**: diferente das spins Marsh (KDE) e
 > Pup (Xfce), os arquivos `kickstart/upstream/fedora-live-gnome-base.ks` e
@@ -18,14 +22,14 @@ explícita para o Snout).
 > desafio JavaScript) que bloqueou o acesso automatizado durante a criação
 > deste projeto. Em compensação, o grupo de pacotes usado
 > (`@^workstation-product-environment`) foi conferido diretamente no
-> comps.xml real do Fedora 44 na máquina de build (não é um palpite) — é
+> comps.xml real do Fedora 45 na máquina de build (não é um palpite) — é
 > literalmente o environment-group usado pela ISO oficial do Fedora
 > Workstation. Ver comentários nesses arquivos para detalhes.
 
 ## Estrutura do projeto
 
 ```
-capivaraos-snout-fedora/
+capivaraos-snout/
 ├── PACKAGES.md                  # Mapeamento de pacotes (espelha a spin Marsh)
 ├── README.md                    # Este arquivo
 ├── branding/                    # Assets de identidade visual (fonte para o RPM)
@@ -60,7 +64,7 @@ GDM) do CapivaraOS.
 Ver `PACKAGES.md` para o mapeamento completo de pacotes e as diferenças
 deliberadas em relação à spin Marsh.
 
-## Pré-requisitos (máquina de build, Fedora 44 x86_64)
+## Pré-requisitos (máquina de build, Fedora 45 x86_64)
 
 ```bash
 sudo dnf install -y lorax rpm-build ImageMagick git createrepo_c
@@ -82,7 +86,7 @@ sudo dnf install -y lorax rpm-build ImageMagick git createrepo_c
 ```
 
 Automatiza os três passos abaixo. A ISO final fica em
-`/var/tmp/capivaraos-snout-result/CapivaraOS-Snout-1.1.5-x86_64.iso`.
+`/var/tmp/capivaraos-snout-result/CapivaraOS-Snout-2.0.0-x86_64.iso`.
 
 ## Passo 1 — Construir o RPM `capivaraos-branding`
 
@@ -91,7 +95,7 @@ cd rpm
 ./build-rpm.sh
 ```
 
-Isso gera `~/rpmbuild/RPMS/noarch/capivaraos-branding-1.1.5-1.*.noarch.rpm`.
+Isso gera `~/rpmbuild/RPMS/noarch/capivaraos-branding-2.0.0-*.noarch.rpm`.
 
 ## Passo 2 — Disponibilizar o RPM como repositório local
 
@@ -119,13 +123,13 @@ python3 ks-flatten.py capivaraos-snout.ks > /var/tmp/capivaraos-snout-flat.ks
 sudo livemedia-creator --ks=/var/tmp/capivaraos-snout-flat.ks \
     --no-virt --resultdir=/var/tmp/capivaraos-snout-result \
     --project="CapivaraOS Snout" --make-iso --iso-only \
-    --iso-name=CapivaraOS-Snout-1.1.5-x86_64.iso \
-    --volid="CapivaraOS Snout 1.1.5" --variant="CapivaraOS Snout" \
+    --iso-name=CapivaraOS-Snout-2.0.0-x86_64.iso \
+    --volid="CapivaraOS Snout 2.0.0" --variant="CapivaraOS Snout" \
     --releasever=44
 ```
 
 A ISO final fica em
-`/var/tmp/capivaraos-snout-result/CapivaraOS-Snout-1.1.5-x86_64.iso`.
+`/var/tmp/capivaraos-snout-result/CapivaraOS-Snout-2.0.0-x86_64.iso`.
 
 Logs úteis em caso de problema:
 - `/var/tmp/capivaraos-snout-result/*.log` (logs do `livemedia-creator`/lorax)
@@ -134,7 +138,7 @@ Logs úteis em caso de problema:
 
 ```bash
 qemu-system-x86_64 -m 4096 -enable-kvm \
-    -cdrom /var/tmp/capivaraos-snout-result/CapivaraOS-Snout-1.1.5-x86_64.iso
+    -cdrom /var/tmp/capivaraos-snout-result/CapivaraOS-Snout-2.0.0-x86_64.iso
 ```
 
 ## Limitações conhecidas
