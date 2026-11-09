@@ -2,7 +2,7 @@
 
 Obrigado pelo interesse em contribuir! Este repositório contém o kickstart,
 os scripts de build e o pacote RPM de branding usados para gerar a ISO do
-**CapivaraOS Snout** (Fedora 44 + GNOME).
+**CapivaraOS Snout** (Fedora 45 + GNOME).
 
 ## Antes de abrir uma issue
 
