@@ -25,6 +25,7 @@ echo "==> 2/4: Construindo RPMs (capivaraos-branding + capivara-central + capiva
 "$SCRIPT_DIR/rpm/build-rpm.sh"
 "$SCRIPT_DIR/apps/capivara-central/rpm/build-rpm.sh"
 "$SCRIPT_DIR/rpm/build-rpm-repos.sh"
+"$SCRIPT_DIR/rpm/build-rpm-wallpapers.sh"
 "$SCRIPT_DIR/rpm/build-rpm-upgrade.sh"
 
 echo "==> 3/4: Criando repositório local em ${REPO_DIR}..."
@@ -43,6 +44,7 @@ mkdir -p "$REPO_DIR"
 # Resolve a NEVRA EXATA de cada spec (Version E Release) e copia só o RPM desta
 # spin — independente do que mais esteja no ~/rpmbuild/RPMS compartilhado.
 for SPEC in "$SCRIPT_DIR/rpm/capivaraos-branding.spec" \
+            "$SCRIPT_DIR/rpm/capivaraos-wallpapers.spec" \
             "$SCRIPT_DIR/apps/capivara-central/rpm/capivara-central.spec" \
             "$SCRIPT_DIR/rpm/capivaraos-repos.spec" \
             "$SCRIPT_DIR/rpm/capivaraos-upgrade.spec"; do
