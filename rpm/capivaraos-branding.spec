@@ -24,7 +24,7 @@
 #     explícita do CapivaraOS Snout, diferente da spin Marsh).
 
 Name:           capivaraos-branding
-Version:        2.0.0
+Version:        2.0.1
 # O sufixo ".snout" no Release NAO e cosmetico -- e o que impede colisao de
 # NEVRA entre as spins. As tres (Marsh, Pup, Snout) constroem um pacote com
 # este MESMO Name e usam o mesmo ~/rpmbuild, entao duas spins na mesma
@@ -60,6 +60,12 @@ BuildRequires:  ImageMagick
 Requires:       plymouth
 Requires:       gdm
 Requires:       dconf
+# Os wallpapers sairam daqui para o capivaraos-wallpapers (PROD-187), que tem
+# Version propria. Esta dependencia NAO e opcional: o DEFAULT_WP acima aponta
+# para /usr/share/backgrounds/capivaraos/, que agora e servido por la. Versao
+# FROUXA de proposito (>=, nao =) -- e o que permite este pacote subir de
+# versao sem arrastar as imagens junto.
+Requires:       capivaraos-wallpapers >= 2.0.0
 
 # NOTA CapivaraOS: NÃO declaramos "Conflicts: fedora-logos" aqui. Diferente
 # da spin KDE (onde sddm/plasma não dependem de fedora-logos), neste Fedora
@@ -218,18 +224,6 @@ set -e
 # claro). Os outros wp da marca (Luar, etc.)
 # seguem disponiveis no seletor como opcao.
 DEFAULT_WP=%{_datadir}/backgrounds/capivaraos/capivaraos-wp-snout-year.png
-
-# ── Wallpapers ───────────────────────────────────────────────────────────────
-# Serie 2.x: so os 8 wallpapers da marca (capivaraos-wp-*.png, os MESMOS do
-# Marsh 2.0). O conjunto do Snout 1.x (fotos CC BY-SA + variantes de cor) foi
-# removido; os wallpapers "padrao" continuam vindo do gnome-backgrounds da base.
-# CapivaraOS_Logo.png fica na pasta so como FONTE de pixmaps/plymouth (nao e
-# papel de parede), por isso e pulado aqui.
-install -d %{buildroot}%{_datadir}/backgrounds/capivaraos
-for WP in backgrounds/*.png; do
-    [ "$(basename "$WP")" = "CapivaraOS_Logo.png" ] && continue
-    install -m 0644 "$WP" %{buildroot}%{_datadir}/backgrounds/capivaraos/
-done
 
 # ── Pixmaps ──────────────────────────────────────────────────────────────────
 install -d %{buildroot}%{_datadir}/pixmaps
@@ -974,7 +968,6 @@ for PAIR in \
 done
 
 %files
-%{_datadir}/backgrounds/capivaraos/
 %{_datadir}/pixmaps/capivaraos.png
 %{_datadir}/pixmaps/capivaraos-logo.png
 %{_datadir}/pixmaps/capivaraos-white.png
@@ -1003,6 +996,10 @@ done
 %{_unitdir}/capivaraos-snapper-setup.service
 
 %changelog
+* Mon Nov 09 2026 CapivaraOS <contato@capivaraos.org> - 2.0.1-1.snout
+- Wallpapers movidos para o pacote capivaraos-wallpapers (PROD-187).
+- Nada muda na area de trabalho: mesmos wallpapers, mesmos caminhos, imagens
+  inalteradas. O dnf instala os dois pacotes na mesma transacao.
 * Wed Nov 04 2026 CapivaraOS Project <capivaraos-bot@users.noreply.github.com> - 2.0.0-1
 - Corte de RELEASE ESTAVEL do 2.0 (PROD-181): os-release/issue/issue.net/VARIANT
   e Summary/description agora "CapivaraOS Snout 2.0.0" limpo -- o rotulo de
