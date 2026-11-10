@@ -97,7 +97,7 @@ install -Dm0644 data/org.capivaraos.Central-autostart.desktop \
   demora a publicar o dir da versão nova (F45 = 404); a função install_docker agora
   sonda fed..fed-3 por curl e fixa o baseurl na versão mais recente publicada, ou
   avisa e segue sem derrubar o card (podman continua disponível). Portado do Pup 2.x.
-  Ver reference_docker_ce_fedora_novo — revisar no GA do F45.
+  Revisar no GA do F45.
 
 * Sat Sep 19 2026 CapivaraOS Bot <capivaraos-bot@users.noreply.github.com> - 0.2.2-1.snout
 - Guard de "instalação em andamento": as ações que usam dnf (IA local, GPU,
@@ -107,7 +107,7 @@ install -Dm0644 data/org.capivaraos.Central-autostart.desktop \
   Backend._dnf_busy() via pgrep.
 - IA local: descrição avisa que no F45 o Ollama já inclui a aceleração AMD (ROCm)
   e baixa vários GB (decisão Opção 1). Card "Ligar GPU" refocado em NVIDIA/CUDA
-  (AMD já vem com a IA local). Ver reference_ollama_rocm_f45 — revisar no GA do F45.
+  (AMD já vem com a IA local). Revisar no GA do F45.
 
 * Sat Sep 19 2026 CapivaraOS Bot <capivaraos-bot@users.noreply.github.com> - 0.2.1-1.snout
 - Folha de seleção (Trilhas de linguagem / Ferramentas de dev) agora PRÉ-MARCA e

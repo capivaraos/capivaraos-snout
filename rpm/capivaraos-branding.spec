@@ -617,7 +617,7 @@ picture-options='zoom'
 [org/gnome/login-screen]
 # Logo do CapivaraOS (branca) no rodape da tela de login, no lugar da logo do
 # Fedora. Nosso system-db:gdm tem prioridade sobre o file-db
-# greeter-dconf-defaults (ver [[reference_gdm_greeter_dconf]]), entao esta chave
+# greeter-dconf-defaults (ver BUG-42), entao esta chave
 # sobrescreve a logo padrao do greeter.
 logo='/usr/share/pixmaps/capivaraos-whitelogo-med.png'
 EOF
@@ -1053,7 +1053,7 @@ done
   sem nenhuma info do sistema. Ao passar um config próprio, o fastfetch não aplica
   a lista de módulos padrão sozinho — um config só-"logo" imprime apenas o logo.
   Adicionada a lista "modules" padrão ao config.jsonc; o logo/cor fica intocado.
-  Provado no fastfetch 2.69. (reference_fastfetch_logo / aviso vindo do Herd.)
+  Provado no fastfetch 2.69. (Aviso vindo do Herd.)
 - os-release/issue: o rótulo da pré-release (VERSION/PRETTY_NAME/VARIANT/issue)
   estava preso em "alpha11" enquanto a ISO já era alpha12 — o fastfetch/Sobre
   reportavam a alpha errada. Corrigido para alpha12 e parametrizado num macro

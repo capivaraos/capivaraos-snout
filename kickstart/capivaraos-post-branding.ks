@@ -37,7 +37,7 @@ done
 # kernel-install passa a derivar do /proc/cmdline REAL do sistema instalado
 # (root=UUID correto + rootflags=subvol=root), valido p/ qualquer layout. Como o
 # %post roda no build, nao da p/ escrever o valor certo aqui -> remover e o certo.
-# Espelhado do Marsh (commit 0bbc113). Ver reference_etc_kernel_cmdline_ghost.
+# Espelhado do Marsh (commit 0bbc113). Ver PROD-133.
 rm -f /etc/kernel/cmdline /usr/lib/kernel/cmdline
 
 # ── Idioma: pt_BR com fallback para en_US ───────────────────────────────────
